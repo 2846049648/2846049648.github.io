@@ -30,6 +30,11 @@ const routes = [
         name: 'About',
         component: () => import('../views/About.vue'),
       },
+      {
+        path: 'gallery',
+        name: 'Gallery',
+        component: () => import('../views/Gallery.vue'),
+      },
     ],
   },
   {
@@ -70,6 +75,11 @@ const routes = [
         path: 'files',
         name: 'AdminFiles',
         component: () => import('../views/admin/FilesManager.vue'),
+      },
+      {
+        path: 'gallery',
+        name: 'AdminGallery',
+        component: () => import('../views/admin/GalleryManager.vue'),
       },
       {
         path: 'profile',

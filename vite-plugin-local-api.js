@@ -10,6 +10,8 @@ const PUBLIC_DIR = path.resolve(ROOT, 'public')
 const IMAGES_DIR = path.resolve(PUBLIC_DIR, 'images')
 const FILES_DIR = path.resolve(PUBLIC_DIR, 'files')
 const PROFILE_PATH = path.resolve(ROOT, 'src/profile.json')
+const ALBUMS_PATH = path.resolve(ROOT, 'src/albums.json')
+const GALLERY_DIR = path.resolve(PUBLIC_DIR, 'images/gallery')
 
 function ensureDir(dir) {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
@@ -118,6 +120,43 @@ function handleUpload(req, uploadDir) {
       if (!resolved) { resolved = true; reject(err) }
     })
 
+    req.pipe(busboy)
+  })
+}
+
+function handlePhotoUpload(req) {
+  return new Promise((resolve, reject) => {
+    const busboy = Busboy({ headers: req.headers })
+    let albumName = ''
+    let resolved = false
+
+    busboy.on('field', (name, val) => {
+      if (name === 'album') albumName = val
+    })
+
+    busboy.on('file', (fieldname, file, { filename }) => {
+      const safeName = Date.now() + '-' + filename.replace(/[^a-zA-Z0-9._-]/g, '')
+      const albumDir = path.join(GALLERY_DIR, albumName || 'default')
+      ensureDir(albumDir)
+      const chunks = []
+      file.on('data', (data) => chunks.push(data))
+      file.on('end', () => {
+        const buf = Buffer.concat(chunks)
+        try {
+          fs.writeFileSync(path.join(albumDir, safeName), buf)
+          if (!resolved) { resolved = true; resolve({ albumName: albumName || 'default', fileName: safeName }) }
+        } catch (err) {
+          if (!resolved) { resolved = true; reject(err) }
+        }
+      })
+    })
+
+    busboy.on('finish', () => {
+      if (!resolved) { resolved = true; reject(new Error('no file')) }
+    })
+    busboy.on('error', (err) => {
+      if (!resolved) { resolved = true; reject(err) }
+    })
     req.pipe(busboy)
   })
 }
@@ -231,12 +270,74 @@ export default function localApiPlugin() {
             }
           }
 
+          // === Albums API ===
+          if (url.pathname === '/api/albums') {
+            if (method === 'GET') {
+              if (fs.existsSync(ALBUMS_PATH)) {
+                res.end(fs.readFileSync(ALBUMS_PATH, 'utf-8'))
+              } else {
+                res.end('[]')
+              }
+              return
+            }
+            if (method === 'POST') {
+              const body = await readJsonBody(req)
+              let albums = []
+              if (fs.existsSync(ALBUMS_PATH)) {
+                albums = JSON.parse(fs.readFileSync(ALBUMS_PATH, 'utf-8'))
+              }
+              const idx = albums.findIndex(a => a.name === body.name)
+              if (idx >= 0) {
+                albums[idx] = body
+              } else {
+                albums.push(body)
+              }
+              fs.writeFileSync(ALBUMS_PATH, JSON.stringify(albums, null, 2), 'utf-8')
+              res.end(JSON.stringify({ ok: true }))
+              return
+            }
+          }
+
+          if (url.pathname.match(/^\/api\/albums\/(.+)$/) && method === 'DELETE') {
+            const name = url.pathname.match(/^\/api\/albums\/(.+)$/)[1]
+            let albums = []
+            if (fs.existsSync(ALBUMS_PATH)) {
+              albums = JSON.parse(fs.readFileSync(ALBUMS_PATH, 'utf-8'))
+            }
+            albums = albums.filter(a => a.name !== name)
+            fs.writeFileSync(ALBUMS_PATH, JSON.stringify(albums, null, 2), 'utf-8')
+            // Remove gallery folder
+            const albumDir = path.join(GALLERY_DIR, name)
+            if (fs.existsSync(albumDir)) {
+              fs.rmSync(albumDir, { recursive: true, force: true })
+            }
+            res.end(JSON.stringify({ ok: true }))
+            return
+          }
+
+          // === Photo upload (multipart: album + file) ===
+          if (url.pathname === '/api/upload/photo' && method === 'POST') {
+            try {
+              const { albumName, fileName: uploadedName } = await handlePhotoUpload(req)
+              res.end(JSON.stringify({ url: `/images/gallery/${albumName}/${uploadedName}` }))
+            } catch (e) {
+              res.statusCode = 400
+              res.end(JSON.stringify({ error: e.message }))
+            }
+            return
+          }
+
           // === Stats API ===
           if (url.pathname === '/api/stats' && method === 'GET') {
+            let albums = []
+            if (fs.existsSync(ALBUMS_PATH)) {
+              albums = JSON.parse(fs.readFileSync(ALBUMS_PATH, 'utf-8'))
+            }
             res.end(JSON.stringify({
               posts: getAllPosts().length,
               media: getMediaFiles().length,
               files: getDownloadFiles().length,
+              albums: albums.length,
             }))
             return
           }

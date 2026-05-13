@@ -18,6 +18,9 @@
       <el-menu-item index="/admin/files">
         <span>文件库</span>
       </el-menu-item>
+      <el-menu-item index="/admin/gallery">
+        <span>相册管理</span>
+      </el-menu-item>
       <el-menu-item index="/admin/profile">
         <span>个人资料</span>
       </el-menu-item>

@@ -1,10 +1,14 @@
 <template>
   <div>
     <h2 class="text-2xl font-bold mb-6">管理概览</h2>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
       <el-card>
         <p class="text-gray-500 text-sm">文章总数</p>
         <p class="text-3xl font-bold mt-2">{{ stats.posts }}</p>
+      </el-card>
+      <el-card>
+        <p class="text-gray-500 text-sm">相册</p>
+        <p class="text-3xl font-bold mt-2">{{ stats.albums }}</p>
       </el-card>
       <el-card>
         <p class="text-gray-500 text-sm">媒体文件</p>
