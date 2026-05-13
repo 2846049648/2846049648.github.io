@@ -107,7 +107,8 @@ const currentPhoto = computed(() => {
 
 onMounted(async () => {
   try {
-    const res = await fetch('/api/albums')
+    const url = import.meta.env.DEV ? '/api/albums' : '/albums.json'
+    const res = await fetch(url)
     albums.value = await res.json()
   } catch {
     albums.value = []

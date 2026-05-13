@@ -42,7 +42,8 @@ const loading = ref(true)
 
 onMounted(async () => {
   try {
-    const res = await fetch('/api/files')
+    const url = import.meta.env.DEV ? '/api/files' : '/files/index.json'
+    const res = await fetch(url)
     files.value = await res.json()
   } catch {
     files.value = []

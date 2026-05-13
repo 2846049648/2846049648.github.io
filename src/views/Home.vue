@@ -90,9 +90,11 @@ const greeting = computed(() => {
 
 onMounted(async () => {
   try {
+    const profileUrl = import.meta.env.DEV ? '/api/profile' : '/profile.json'
+    const postsUrl = import.meta.env.DEV ? '/api/posts' : '/posts/index.json'
     const [profileRes, postsRes] = await Promise.all([
-      fetch('/api/profile'),
-      fetch('/api/posts'),
+      fetch(profileUrl),
+      fetch(postsUrl),
     ])
     if (profileRes.ok) profile.value = await profileRes.json()
     if (postsRes.ok) {

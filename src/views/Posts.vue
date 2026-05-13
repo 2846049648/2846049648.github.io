@@ -78,8 +78,9 @@ const filteredPosts = computed(() => {
 
 onMounted(async () => {
   try {
+    const dataUrl = import.meta.env.DEV ? '/api/posts' : '/posts/index.json'
     const [postsRes, profileRes] = await Promise.all([
-      fetch('/api/posts'),
+      fetch(dataUrl),
       fetch('/api/profile'),
     ])
     posts.value = await postsRes.json()

@@ -1,3 +1,7 @@
 node_modules
 dist
 *.local
+public/posts
+public/profile.json
+public/albums.json
+public/files/index.json

@@ -40,7 +40,8 @@ const isDev = computed(() => import.meta.env.DEV)
 const profile = ref({ name: '我的空间' })
 onMounted(async () => {
   try {
-    const res = await fetch('/api/profile')
+    const url = import.meta.env.DEV ? '/api/profile' : '/profile.json'
+    const res = await fetch(url)
     if (res.ok) profile.value = await res.json()
   } catch {}
 })

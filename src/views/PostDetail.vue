@@ -65,17 +65,29 @@ const repoSet = computed(() => !!import.meta.env.VITE_UTTERANCES_REPO)
 
 onMounted(async () => {
   try {
-    const [postRes, profileRes] = await Promise.all([
-      fetch(`/api/posts/${route.params.slug}`),
-      fetch('/api/profile'),
-    ])
-    if (!postRes.ok) { error.value = '文章不存在'; return }
-    const data = await postRes.json()
-    post.value = {
-      ...data,
-      content: marked(data.content || ''),
+    const slug = route.params.slug
+    if (import.meta.env.DEV) {
+      // Dev: use API
+      const [postRes, profileRes] = await Promise.all([
+        fetch(`/api/posts/${slug}`),
+        fetch('/api/profile'),
+      ])
+      if (!postRes.ok) { error.value = '文章不存在'; return }
+      const data = await postRes.json()
+      post.value = { ...data, content: marked(data.content || '') }
+      if (profileRes.ok) profile.value = await profileRes.json()
+    } else {
+      // Production: fetch static .md file
+      const [mdRes, profileRes] = await Promise.all([
+        fetch(`/posts/${slug}.md`),
+        fetch('/profile.json'),
+      ])
+      if (!mdRes.ok) { error.value = '文章不存在'; return }
+      const text = await mdRes.text()
+      const { data, content } = parseFrontMatter(text)
+      post.value = { ...data, slug, content: marked(content) }
+      if (profileRes.ok) profile.value = await profileRes.json()
     }
-    if (profileRes.ok) profile.value = await profileRes.json()
     loadUtterances()
   } catch (e) {
     error.value = e.message
@@ -83,6 +95,24 @@ onMounted(async () => {
     loading.value = false
   }
 })
+
+function parseFrontMatter(text) {
+  const match = text.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/)
+  if (!match) return { data: { title: '无标题', tags: [] }, content: text }
+  const data = {}
+  match[1].split('\n').forEach(line => {
+    const idx = line.indexOf(':')
+    if (idx === -1) return
+    const key = line.slice(0, idx).trim()
+    const val = line.slice(idx + 1).trim()
+    if (val.startsWith('[') && val.endsWith(']')) {
+      data[key] = val.slice(1, -1).split(',').map(s => s.trim().replace(/['"]/g, ''))
+    } else {
+      data[key] = val.replace(/^['"]|['"]$/g, '')
+    }
+  })
+  return { data, content: match[2] }
+}
 
 function loadUtterances() {
   const repo = import.meta.env.VITE_UTTERANCES_REPO
