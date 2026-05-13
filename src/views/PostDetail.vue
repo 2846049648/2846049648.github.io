@@ -38,11 +38,13 @@
 
       <!-- Utterances Comments -->
       <div class="mt-8 bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-10">
-        <h3 class="text-lg font-semibold text-gray-900 mb-2">评论</h3>
-        <p v-if="!utterancesLoaded" class="text-sm text-gray-400 mb-4">
-          加载评论需要 GitHub 登录。
-          <span v-if="!repoSet" class="text-orange-500">请设置环境变量 <code class="bg-gray-100 px-1 rounded text-xs">VITE_UTTERANCES_REPO</code></span>
-        </p>
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">评论</h3>
+        <div v-if="!repoSet" class="text-sm text-gray-400">
+          评论功能未启用（需配置 <code class="bg-gray-100 px-1 rounded text-xs">VITE_UTTERANCES_REPO</code>）
+        </div>
+        <div v-else-if="!utterancesLoaded" class="text-sm text-gray-400">
+          评论加载中...
+        </div>
         <div id="utterances-container" />
       </div>
     </template>
@@ -88,11 +90,14 @@ onMounted(async () => {
       post.value = { ...data, slug, content: marked(content) }
       if (profileRes.ok) profile.value = await profileRes.json()
     }
-    loadUtterances()
   } catch (e) {
     error.value = e.message
   } finally {
     loading.value = false
+    // 等 DOM 更新后再加载 Utterances（容器在 v-else 块中）
+    if (import.meta.env.VITE_UTTERANCES_REPO) {
+      nextTick(loadUtterances)
+    }
   }
 })
 
@@ -116,21 +121,18 @@ function parseFrontMatter(text) {
 
 function loadUtterances() {
   const repo = import.meta.env.VITE_UTTERANCES_REPO
-  if (!repo) return
-  nextTick(() => {
-    const container = document.getElementById('utterances-container')
-    if (!container || container.querySelector('script')) return
-    const script = document.createElement('script')
-    script.src = 'https://utteranc.es/client.js'
-    script.setAttribute('repo', repo)
-    script.setAttribute('issue-term', 'pathname')
-    script.setAttribute('label', 'comments')
-    script.setAttribute('theme', 'github-light')
-    script.setAttribute('crossorigin', 'anonymous')
-    script.async = true
-    container.appendChild(script)
-    utterancesLoaded.value = true
-  })
+  const container = document.getElementById('utterances-container')
+  if (!container || container.querySelector('script')) return
+  const script = document.createElement('script')
+  script.src = 'https://utteranc.es/client.js'
+  script.setAttribute('repo', repo)
+  script.setAttribute('issue-term', 'pathname')
+  script.setAttribute('label', 'comments')
+  script.setAttribute('theme', 'github-light')
+  script.setAttribute('crossorigin', 'anonymous')
+  script.async = true
+  container.appendChild(script)
+  utterancesLoaded.value = true
 }
 </script>
 
