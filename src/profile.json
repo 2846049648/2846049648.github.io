@@ -1,10 +1,17 @@
 {
   "name": "kuwen",
-  "avatar": "",
-  "bio": "全栈开发者，热爱开源与技术分享",
-  "email": "kuwen@example.com",
+  "avatar": "images/1778744665494-4ESjmWvaco29dqd.thumb.1000_0.jpeg",
+  "bio": "全栈开发者，热爱开源与技术分享；热爱摄影、排球",
+  "email": "chenjiang820@outlook.com",
   "social": {
     "GitHub": "https://github.com/chenj"
   },
-  "skills": ["Vue.js", "Node.js", "Python", "TypeScript", "Docker", "PostgreSQL"]
+  "skills": [
+    "Vue.js",
+    "Node.js",
+    "Python",
+    "TypeScript",
+    "Docker",
+    "PostgreSQL"
+  ]
 }
