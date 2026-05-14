@@ -6,42 +6,57 @@
     </div>
 
     <!-- Album list -->
-    <div v-if="loading" class="text-center py-12 text-gray-400">加载中...</div>
-    <div v-else-if="albums.length === 0" class="text-center py-12 text-gray-400">暂无相册，点击新建</div>
+    <div v-if="loading" class="text-center py-12" :style="{ color: 'var(--text-light)' }">加载中...</div>
+    <div v-else-if="albums.length === 0" class="text-center py-12" :style="{ color: 'var(--text-light)' }">暂无相册，点击新建</div>
     <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <el-card v-for="album in albums" :key="album.name" class="!p-0" shadow="sm">
         <div class="p-4">
           <div class="flex justify-between items-start mb-3">
             <div>
-              <h3 class="font-semibold text-gray-900">{{ album.title }}</h3>
-              <p class="text-sm text-gray-500">{{ album.photos?.length || 0 }} 张照片</p>
+              <h3 class="font-semibold" :style="{ color: 'var(--text-primary)' }">{{ album.title }}</h3>
+              <p class="text-sm" :style="{ color: 'var(--text-muted)' }">{{ album.photos?.length || 0 }} 张照片</p>
+              <p v-if="album.story" class="text-xs mt-1" style="color: #8b5cf6;">📝 包含摄影随笔</p>
             </div>
-            <el-button type="danger" size="small" :loading="deleting === album.name" @click="remove(album.name)">删除</el-button>
+            <div class="flex gap-1">
+              <el-button size="small" @click="editAlbum(album)">编辑</el-button>
+              <el-button type="danger" size="small" :loading="deleting === album.name" @click="remove(album.name)">删除</el-button>
+            </div>
           </div>
-          <div class="text-xs text-gray-400 mb-2">{{ album.description || '无描述' }}</div>
+          <div class="text-xs mb-2" :style="{ color: 'var(--text-muted)' }">{{ album.description || '无描述' }}</div>
           <!-- Photos preview -->
           <div v-if="album.photos?.length" class="flex gap-1 flex-wrap mb-3">
-            <img v-for="(p, i) in album.photos.slice(0, 6)" :key="i" :src="p"
-              class="w-14 h-14 object-cover rounded cursor-pointer border-2 hover:border-blue-400 transition-all"
-              @click="previewImage = p" />
+            <div
+              v-for="(p, i) in album.photos.slice(0, 6)" :key="i"
+              class="relative group/item"
+            >
+              <img :src="getPhotoUrl(p)"
+                class="w-14 h-14 object-cover rounded cursor-pointer border-2 hover:border-blue-400 transition-all"
+                @click="previewImage = getPhotoUrl(p)" />
+              <span v-if="getPhotoCaption(p)" class="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[8px] px-0.5 truncate opacity-0 group-hover/item:opacity-100 transition-opacity">
+                {{ getPhotoCaption(p) }}
+              </span>
+            </div>
           </div>
           <!-- Upload to this album -->
-          <el-upload
-            :action="uploadUrl"
-            :data="{ album: album.name }"
-            :show-file-list="false"
-            :on-success="() => reload()"
-            :on-error="() => ElMessage.error('上传失败')"
-            accept="image/*"
-          >
-            <el-button size="small">上传照片</el-button>
-          </el-upload>
+          <div class="flex gap-2 flex-wrap">
+            <el-upload
+              :action="uploadUrl"
+              :data="{ album: album.name }"
+              :show-file-list="false"
+              :on-success="() => reload()"
+              :on-error="() => ElMessage.error('上传失败')"
+              accept="image/*"
+            >
+              <el-button size="small">上传照片</el-button>
+            </el-upload>
+            <el-button size="small" @click="editPhotos(album)">管理照片</el-button>
+          </div>
         </div>
       </el-card>
     </div>
 
     <!-- Create/Edit dialog -->
-    <el-dialog v-model="dialogVisible" :title="editing ? '编辑相册' : '新建相册'" width="480">
+    <el-dialog v-model="dialogVisible" :title="editing ? '编辑相册' : '新建相册'" width="560">
       <el-form label-width="80">
         <el-form-item label="标识">
           <el-input v-model="form.name" placeholder="英文标识（如 travel-2026）" :disabled="!!editing" />
@@ -55,10 +70,46 @@
         <el-form-item label="封面">
           <el-input v-model="form.cover" placeholder="封面图片 URL（选填，默认用第一张）" />
         </el-form-item>
+        <el-form-item label="摄影随笔">
+          <el-input
+            v-model="form.story"
+            type="textarea"
+            :rows="4"
+            placeholder="用 Markdown 讲述照片背后的故事（可选）"
+          />
+          <div class="text-xs mt-1" :style="{ color: 'var(--text-light)' }">支持 Markdown 格式</div>
+        </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
         <el-button type="primary" :loading="saving" @click="save">保存</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- Photo management dialog -->
+    <el-dialog v-model="photoDialogVisible" :title="'管理照片 - ' + photoAlbumName" width="640">
+      <div v-if="!photoAlbum" class="text-center py-4 text-gray-400">暂无数据</div>
+      <div v-else class="space-y-3">
+        <div
+          v-for="(photo, idx) in photoAlbum.photos" :key="idx"
+          class="flex items-center gap-3 p-2 rounded-lg border"
+          :style="{ borderColor: 'var(--border-color)' }"
+        >
+          <img :src="getPhotoUrl(photo)" class="w-16 h-16 object-cover rounded flex-shrink-0" />
+          <div class="flex-1 min-w-0">
+            <el-input
+              :model-value="getPhotoCaption(photo)"
+              placeholder="照片说明（可选）"
+              size="small"
+              @change="(val) => updateCaption(idx, val)"
+            />
+          </div>
+          <el-button size="small" type="danger" @click="removePhoto(idx)">移除</el-button>
+        </div>
+      </div>
+      <template #footer>
+        <el-button @click="photoDialogVisible = false">关闭</el-button>
+        <el-button type="primary" @click="savePhotoCaptions">保存说明</el-button>
       </template>
     </el-dialog>
 
@@ -82,7 +133,12 @@ const saving = ref(false)
 const previewImage = ref('')
 const uploadUrl = '/api/upload/photo'
 
-const form = ref({ name: '', title: '', description: '', cover: '', photos: [] })
+// Photo management
+const photoDialogVisible = ref(false)
+const photoAlbum = ref(null)
+const photoAlbumName = ref('')
+
+const form = ref({ name: '', title: '', description: '', cover: '', story: '', photos: [] })
 
 onMounted(reload)
 
@@ -97,8 +153,21 @@ async function reload() {
 
 function showCreate() {
   editing.value = false
-  form.value = { name: '', title: '', description: '', cover: '', photos: [] }
+  form.value = { name: '', title: '', description: '', cover: '', story: '', photos: [] }
   dialogVisible.value = true
+}
+
+function editAlbum(album) {
+  editing.value = true
+  form.value = { ...album, photos: album.photos || [] }
+  dialogVisible.value = true
+}
+
+function getPhotoUrl(photo) {
+  return typeof photo === 'string' ? photo : (photo.url || '')
+}
+function getPhotoCaption(photo) {
+  return typeof photo === 'string' ? '' : (photo.caption || '')
 }
 
 async function save() {
@@ -144,6 +213,46 @@ async function remove(name) {
     ElMessage.error('删除失败: ' + e.message)
   } finally {
     deleting.value = ''
+  }
+}
+
+// Photo management
+function editPhotos(album) {
+  photoAlbum.value = JSON.parse(JSON.stringify(album))
+  photoAlbumName.value = album.title
+  photoDialogVisible.value = true
+}
+
+function updateCaption(idx, val) {
+  if (!photoAlbum.value) return
+  const photo = photoAlbum.value.photos[idx]
+  if (typeof photo === 'string') {
+    photoAlbum.value.photos[idx] = { url: photo, caption: val }
+  } else {
+    photo.caption = val
+  }
+}
+
+function removePhoto(idx) {
+  if (!photoAlbum.value) return
+  photoAlbum.value.photos.splice(idx, 1)
+}
+
+async function savePhotoCaptions() {
+  if (!photoAlbum.value) return
+  try {
+    const res = await fetch('/api/albums', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(photoAlbum.value),
+    })
+    if (res.ok) {
+      ElMessage.success('已保存')
+      photoDialogVisible.value = false
+      await reload()
+    }
+  } catch (e) {
+    ElMessage.error('保存失败: ' + e.message)
   }
 }
 </script>

@@ -228,6 +228,15 @@ export default function localApiPlugin() {
             return
           }
 
+          const mediaMatch = url.pathname.match(/^\/api\/media\/(.+)$/)
+          if (mediaMatch && method === 'DELETE') {
+            const fileName = decodeURIComponent(mediaMatch[1])
+            const filePath = path.join(IMAGES_DIR, fileName)
+            if (fs.existsSync(filePath)) fs.unlinkSync(filePath)
+            res.end(JSON.stringify({ ok: true }))
+            return
+          }
+
           if (url.pathname === '/api/upload/image' && method === 'POST') {
             ensureDir(IMAGES_DIR)
             const fileName = await handleUpload(req, IMAGES_DIR)

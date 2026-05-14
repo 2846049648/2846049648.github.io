@@ -29,44 +29,48 @@
 
     <!-- Quick links -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-12">
-      <router-link to="/posts" class="group bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all border border-gray-100">
-        <div class="w-10 h-10 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+      <router-link to="/posts" class="group rounded-xl p-6 shadow-sm hover:shadow-md transition-all border"
+        :style="{ background: 'var(--bg-surface)', borderColor: 'var(--border-color)' }">
+        <div class="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>
         </div>
-        <h3 class="font-semibold text-gray-900 mb-1">文章</h3>
-        <p class="text-sm text-gray-500">阅读最新技术分享与随笔</p>
+        <h3 class="font-semibold mb-1" :style="{ color: 'var(--text-primary)' }">文章</h3>
+        <p class="text-sm" :style="{ color: 'var(--text-muted)' }">阅读最新技术分享与随笔</p>
       </router-link>
-      <router-link to="/gallery" class="group bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all border border-gray-100">
-        <div class="w-10 h-10 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+      <router-link to="/gallery" class="group rounded-xl p-6 shadow-sm hover:shadow-md transition-all border"
+        :style="{ background: 'var(--bg-surface)', borderColor: 'var(--border-color)' }">
+        <div class="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
         </div>
-        <h3 class="font-semibold text-gray-900 mb-1">相册</h3>
-        <p class="text-sm text-gray-500">浏览生活记录与精彩瞬间</p>
+        <h3 class="font-semibold mb-1" :style="{ color: 'var(--text-primary)' }">相册</h3>
+        <p class="text-sm" :style="{ color: 'var(--text-muted)' }">浏览生活记录与精彩瞬间</p>
       </router-link>
-      <router-link to="/downloads" class="group bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all border border-gray-100">
-        <div class="w-10 h-10 rounded-lg bg-green-100 text-green-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+      <router-link to="/downloads" class="group rounded-xl p-6 shadow-sm hover:shadow-md transition-all border"
+        :style="{ background: 'var(--bg-surface)', borderColor: 'var(--border-color)' }">
+        <div class="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/50 text-green-600 dark:text-green-400 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
         </div>
-        <h3 class="font-semibold text-gray-900 mb-1">下载</h3>
-        <p class="text-sm text-gray-500">获取实用资源与文件</p>
+        <h3 class="font-semibold mb-1" :style="{ color: 'var(--text-primary)' }">下载</h3>
+        <p class="text-sm" :style="{ color: 'var(--text-muted)' }">获取实用资源与文件</p>
       </router-link>
     </div>
 
     <!-- Recent posts -->
     <section v-if="recentPosts.length">
-      <h2 class="text-xl font-bold text-gray-900 mb-4">最近更新</h2>
+      <h2 class="text-xl font-bold mb-4" :style="{ color: 'var(--text-primary)' }">最近更新</h2>
       <div class="space-y-3">
         <router-link
           v-for="post in recentPosts"
           :key="post.slug"
           :to="`/posts/${post.slug}`"
-          class="block bg-white rounded-xl p-5 shadow-sm hover:shadow-md transition-all border border-gray-100"
+          class="block rounded-xl p-5 shadow-sm hover:shadow-md transition-all border"
+          :style="{ background: 'var(--bg-surface)', borderColor: 'var(--border-color)' }"
         >
           <div class="flex items-center justify-between">
-            <h3 class="font-medium text-gray-900">{{ post.title }}</h3>
-            <span class="text-sm text-gray-400">{{ post.date }}</span>
+            <h3 class="font-medium" :style="{ color: 'var(--text-primary)' }">{{ post.title }}</h3>
+            <span class="text-sm" :style="{ color: 'var(--text-light)' }">{{ post.date }}</span>
           </div>
-          <p v-if="post.excerpt" class="text-sm text-gray-500 mt-1 line-clamp-1">{{ post.excerpt }}</p>
+          <p v-if="post.excerpt" class="text-sm mt-1 line-clamp-1" :style="{ color: 'var(--text-muted)' }">{{ post.excerpt }}</p>
         </router-link>
       </div>
     </section>
@@ -82,10 +86,10 @@ const recentPosts = ref([])
 const greeting = computed(() => {
   const h = new Date().getHours()
   if (h < 6) return '夜深了，还不睡吗？'
-  if (h < 12) return '早上好！☀️'
+  if (h < 12) return '早上好！'
   if (h < 14) return '中午好！'
   if (h < 18) return '下午好！'
-  return '晚上好！🌙'
+  return '晚上好！'
 })
 
 onMounted(async () => {
