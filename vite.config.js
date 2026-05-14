@@ -9,4 +9,16 @@ export default defineConfig({
   server: {
     host: true,
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('highlight.js')) return 'vendor-highlight'
+          if (id.includes('element-plus')) return 'vendor-element'
+          if (id.includes('marked')) return 'vendor-marked'
+          if (id.includes('exifr')) return 'vendor-exifr'
+        },
+      },
+    },
+  },
 })
