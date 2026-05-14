@@ -3,33 +3,28 @@
     "name": "food2026",
     "title": "美食鉴赏",
     "description": "好吃的各色美食",
-    "cover": "images/gallery/food2026/1778741776104-d82911110c2d4a4473b1a47445f7c64.jpg",
+    "cover": "/images/gallery/food2026/1778741776104-d82911110c2d4a4473b1a47445f7c64.webp",
     "story": "",
     "photos": [
       {
-        "url": "/images/gallery/food2026/1778741776104-d82911110c2d4a4473b1a47445f7c64_thumb.webp",
-        "caption": "全州醋血鸭，香麻辣、口感极佳，特色美食",
-        "original": "/images/gallery/food2026/1778741776104-d82911110c2d4a4473b1a47445f7c64.jpg"
+        "url": "/images/gallery/food2026/1778741776104-d82911110c2d4a4473b1a47445f7c64.webp",
+        "caption": "全州醋血鸭，香麻辣、口感极佳，特色美食"
       },
       {
-        "url": "/images/gallery/food2026/1778741785667-c9646a30ca8cab9b02695e984716c06_thumb.webp",
-        "caption": "桂林米粉，切粉类，卤粉",
-        "original": "/images/gallery/food2026/1778741785667-c9646a30ca8cab9b02695e984716c06.jpg"
+        "url": "/images/gallery/food2026/1778741785667-c9646a30ca8cab9b02695e984716c06.webp",
+        "caption": "桂林米粉，切粉类，卤粉"
       },
       {
-        "url": "/images/gallery/food2026/1778741793360-dad127386c35021abc38a4e5324e40d_thumb.webp",
-        "caption": "桂林米粉，米粉类，卤粉",
-        "original": "/images/gallery/food2026/1778741793360-dad127386c35021abc38a4e5324e40d.jpg"
+        "url": "/images/gallery/food2026/1778741793360-dad127386c35021abc38a4e5324e40d.webp",
+        "caption": "桂林米粉，米粉类，卤粉"
       },
       {
-        "url": "/images/gallery/food2026/1778741804469-d3bd61a44ba6abef3c43ee0e65a701b_thumb.webp",
-        "caption": "桂林米粉，制作出餐出，自选主配料，加特色卤水",
-        "original": "/images/gallery/food2026/1778741804469-d3bd61a44ba6abef3c43ee0e65a701b.jpg"
+        "url": "/images/gallery/food2026/1778741804469-d3bd61a44ba6abef3c43ee0e65a701b.webp",
+        "caption": "桂林米粉，制作出餐出，自选主配料，加特色卤水"
       },
       {
-        "url": "/images/gallery/food2026/1778741811762-3880f3e092f29818694c4c81b789ffe_thumb.webp",
-        "caption": "桂林米粉，自选小料",
-        "original": "/images/gallery/food2026/1778741811762-3880f3e092f29818694c4c81b789ffe.jpg"
+        "url": "/images/gallery/food2026/1778741811762-3880f3e092f29818694c4c81b789ffe.webp",
+        "caption": "桂林米粉，自选小料"
       }
     ]
   }
