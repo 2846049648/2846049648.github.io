@@ -2,6 +2,7 @@ import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import Busboy from 'busboy'
+import sharp from 'sharp'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '.')
@@ -15,6 +16,21 @@ const GALLERY_DIR = path.resolve(PUBLIC_DIR, 'images/gallery')
 
 function ensureDir(dir) {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
+}
+
+async function optimizeImage(buf) {
+  try {
+    return await sharp(buf)
+      .resize(1920, 1920, { fit: 'inside', withoutEnlargement: true })
+      .webp({ quality: 82 })
+      .toBuffer()
+  } catch {
+    return buf
+  }
+}
+
+function toWebpName(name) {
+  return name.replace(/\.(jpe?g|png|gif|webp|avif|bmp|tiff?)$/i, '.webp')
 }
 
 function parseFrontmatter(text) {
@@ -101,13 +117,15 @@ function handleUpload(req, uploadDir) {
 
     busboy.on('file', (fieldname, file, { filename }) => {
       const safeName = Date.now() + '-' + filename.replace(/[^a-zA-Z0-9._-]/g, '')
+      const webpName = toWebpName(safeName)
       const chunks = []
       file.on('data', (data) => chunks.push(data))
-      file.on('end', () => {
+      file.on('end', async () => {
         const buf = Buffer.concat(chunks)
         try {
-          fs.writeFileSync(path.join(uploadDir, safeName), buf)
-          if (!resolved) { resolved = true; resolve(safeName) }
+          const optimized = await optimizeImage(buf)
+          fs.writeFileSync(path.join(uploadDir, webpName), optimized)
+          if (!resolved) { resolved = true; resolve(webpName) }
         } catch (err) {
           if (!resolved) { resolved = true; reject(err) }
         }
@@ -138,15 +156,17 @@ function handlePhotoUpload(req) {
 
     busboy.on('file', (fieldname, file, { filename }) => {
       const safeName = Date.now() + '-' + filename.replace(/[^a-zA-Z0-9._-]/g, '')
+      const webpName = toWebpName(safeName)
       const albumDir = path.join(GALLERY_DIR, albumName || 'default')
       ensureDir(albumDir)
       const chunks = []
       file.on('data', (data) => chunks.push(data))
-      file.on('end', () => {
+      file.on('end', async () => {
         const buf = Buffer.concat(chunks)
         try {
-          fs.writeFileSync(path.join(albumDir, safeName), buf)
-          if (!resolved) { resolved = true; resolve({ albumName: albumName || 'default', fileName: safeName }) }
+          const optimized = await optimizeImage(buf)
+          fs.writeFileSync(path.join(albumDir, webpName), optimized)
+          if (!resolved) { resolved = true; resolve({ albumName: albumName || 'default', fileName: webpName }) }
         } catch (err) {
           if (!resolved) { resolved = true; reject(err) }
         }
