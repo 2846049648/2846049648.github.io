@@ -2,29 +2,15 @@
   <div>
     <div class="flex justify-between items-center mb-6">
       <h2 class="text-2xl font-bold">媒体库</h2>
-      <div class="flex gap-2">
-        <div>
-          <el-input
-            v-model="smmsToken"
-            type="password"
-            placeholder="sm.ms Token"
-            size="small"
-            class="w-48"
-            show-password
-            @change="saveToken"
-          />
-        </div>
-        <SmmUploader :token="smmsToken" @uploaded="onSmmUpload" />
-        <el-upload
-          :action="uploadUrl"
-          :show-file-list="false"
-          :on-success="handleSuccess"
-          :on-error="handleError"
-          accept="image/*"
-        >
-          <el-button type="primary">上传图片</el-button>
-        </el-upload>
-      </div>
+      <el-upload
+        :action="uploadUrl"
+        :show-file-list="false"
+        :on-success="handleSuccess"
+        :on-error="handleError"
+        accept="image/*"
+      >
+        <el-button type="primary">上传图片</el-button>
+      </el-upload>
     </div>
     <div v-if="loading" class="text-center py-12" :style="{ color: 'var(--text-light)' }">加载中...</div>
     <div v-else-if="images.length === 0" class="text-center py-12" :style="{ color: 'var(--text-light)' }">
@@ -46,16 +32,10 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import SmmUploader from '../../components/SmmUploader.vue'
 
 const images = ref([])
 const loading = ref(true)
 const uploadUrl = '/api/upload/image'
-const smmsToken = ref(localStorage.getItem('smms_token') || '')
-
-function saveToken() {
-  localStorage.setItem('smms_token', smmsToken.value)
-}
 
 onMounted(loadMedia)
 
@@ -80,11 +60,6 @@ function handleSuccess(res) {
 
 function handleError() {
   ElMessage.error('上传失败')
-}
-
-function onSmmUpload(data) {
-  const name = data.url.split('/').pop()
-  images.value.unshift({ name, url: data.url })
 }
 
 function copyLink(url) {

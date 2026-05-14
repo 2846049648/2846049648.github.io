@@ -42,7 +42,7 @@
         <div class="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
         </div>
-        <h3 class="font-semibold mb-1" :style="{ color: 'var(--text-primary)' }">相册</h3>
+        <h3 class="font-semibold mb-1" :style="{ color: 'var(--text-primary)' }">时光剪影</h3>
         <p class="text-sm" :style="{ color: 'var(--text-muted)' }">浏览生活记录与精彩瞬间</p>
       </router-link>
       <router-link to="/downloads" class="group rounded-xl p-6 shadow-sm hover:shadow-md transition-all border"

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h2 class="text-3xl font-bold mb-2" :style="{ color: 'var(--text-primary)' }">个人相册</h2>
+    <h2 class="text-3xl font-bold mb-2" :style="{ color: 'var(--text-primary)' }">时光剪影</h2>
     <p class="mb-8" :style="{ color: 'var(--text-muted)' }">记录生活中的美好瞬间</p>
 
     <div v-if="loading" class="text-center py-16" :style="{ color: 'var(--text-light)' }">
@@ -16,17 +16,20 @@
       <div v-if="!currentAlbum" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <div
           v-for="album in albums" :key="album.name"
-          class="group cursor-pointer rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all border"
+          class="group rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all border cursor-pointer"
           :style="{ background: 'var(--bg-surface)', borderColor: 'var(--border-color)' }"
+          role="button"
+          tabindex="0"
           @click="openAlbum(album)"
+          @keydown.enter="openAlbum(album)"
         >
           <div class="aspect-[4/3] overflow-hidden relative" :style="{ background: 'var(--bg-muted)' }">
             <img v-if="album.cover" :src="album.cover" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
             <div v-else class="w-full h-full flex items-center justify-center" :style="{ color: 'var(--text-light)' }">
               <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
             </div>
-            <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-            <div class="absolute bottom-3 right-3 bg-black/50 text-white text-xs px-2 py-1 rounded-full">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+            <div class="absolute bottom-3 right-3 bg-black/50 text-white text-xs px-2 py-1 rounded-full pointer-events-none">
               {{ album.photos ? album.photos.length : 0 }} 张
             </div>
           </div>
@@ -65,6 +68,9 @@
               loading="lazy"
             />
             <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+            <div v-if="getPhotoCaption(photo)" class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3 pt-8 opacity-0 group-hover:opacity-100 transition-opacity">
+              <p class="text-white text-sm leading-tight">{{ getPhotoCaption(photo) }}</p>
+            </div>
           </div>
         </div>
       </div>
@@ -96,6 +102,11 @@
           @load="loadExif"
           ref="psImgRef"
         />
+        <!-- Caption -->
+        <div v-if="getPhotoCaption(currentAlbum?.photos?.[psIndex])" class="absolute bottom-16 left-1/2 -translate-x-1/2 text-white/80 text-sm text-center px-4 max-w-[70vw] drop-shadow-lg">
+          {{ getPhotoCaption(currentAlbum?.photos?.[psIndex]) }}
+        </div>
+
         <!-- EXIF info overlay -->
         <div
           v-if="exifData"
@@ -179,6 +190,9 @@ function getPhotoUrl(photo) {
   return typeof photo === 'string' ? photo : photo.url
 }
 function getPhotoAlt(photo) {
+  return typeof photo === 'string' ? '' : (photo.caption || '')
+}
+function getPhotoCaption(photo) {
   return typeof photo === 'string' ? '' : (photo.caption || '')
 }
 

@@ -43,7 +43,7 @@
               :action="uploadUrl"
               :data="{ album: album.name }"
               :show-file-list="false"
-              :on-success="() => reload()"
+              :on-success="onPhotoUploaded"
               :on-error="() => ElMessage.error('上传失败')"
               accept="image/*"
             >
@@ -101,6 +101,7 @@
               :model-value="getPhotoCaption(photo)"
               placeholder="照片说明（可选）"
               size="small"
+              @input="(val) => updateCaption(idx, val)"
               @change="(val) => updateCaption(idx, val)"
             />
           </div>
@@ -151,6 +152,11 @@ async function reload() {
   finally { loading.value = false }
 }
 
+function onPhotoUploaded(res) {
+  ElMessage.success('照片已上传')
+  reload()
+}
+
 function showCreate() {
   editing.value = false
   form.value = { name: '', title: '', description: '', cover: '', story: '', photos: [] }
@@ -177,10 +183,10 @@ async function save() {
   }
   saving.value = true
   try {
-    const albumDir = `/images/gallery/${form.value.name}`
     const payload = {
       ...form.value,
-      cover: form.value.cover || `${albumDir}/placeholder.jpg`,
+      // 没设封面就用第一张照片
+      cover: form.value.cover || (form.value.photos?.length ? getPhotoUrl(form.value.photos[0]) : ''),
     }
 
     const res = await fetch('/api/albums', {
@@ -217,8 +223,11 @@ async function remove(name) {
 }
 
 // Photo management
+let originalPhotos = []
+
 function editPhotos(album) {
   photoAlbum.value = JSON.parse(JSON.stringify(album))
+  originalPhotos = photoAlbum.value.photos.map(p => getPhotoUrl(p))
   photoAlbumName.value = album.title
   photoDialogVisible.value = true
 }
@@ -247,6 +256,15 @@ async function savePhotoCaptions() {
       body: JSON.stringify(photoAlbum.value),
     })
     if (res.ok) {
+      // Delete removed photo files from disk
+      const currentUrls = new Set(photoAlbum.value.photos.map(p => getPhotoUrl(p)))
+      for (const url of originalPhotos) {
+        if (url && !currentUrls.has(url)) {
+          try {
+            await fetch(`/api/media/${encodeURIComponent(url.replace(/^\//, ''))}`, { method: 'DELETE' })
+          } catch { /* file may not exist */ }
+        }
+      }
       ElMessage.success('已保存')
       photoDialogVisible.value = false
       await reload()

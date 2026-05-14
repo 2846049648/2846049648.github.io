@@ -64,10 +64,12 @@ function getAllPosts() {
 
 function getMediaFiles() {
   ensureDir(IMAGES_DIR)
-  return fs.readdirSync(IMAGES_DIR).map(file => ({
-    name: file,
-    url: `/images/${file}`,
-  }))
+  return fs.readdirSync(IMAGES_DIR)
+    .filter(file => fs.statSync(path.join(IMAGES_DIR, file)).isFile())
+    .map(file => ({
+      name: file,
+      url: `/images/${file}`,
+    }))
 }
 
 function getDownloadFiles() {
@@ -232,7 +234,14 @@ export default function localApiPlugin() {
           if (mediaMatch && method === 'DELETE') {
             const fileName = decodeURIComponent(mediaMatch[1])
             const filePath = path.join(IMAGES_DIR, fileName)
-            if (fs.existsSync(filePath)) fs.unlinkSync(filePath)
+            if (fs.existsSync(filePath)) {
+              const stat = fs.statSync(filePath)
+              if (stat.isDirectory()) {
+                fs.rmSync(filePath, { recursive: true, force: true })
+              } else {
+                fs.unlinkSync(filePath)
+              }
+            }
             res.end(JSON.stringify({ ok: true }))
             return
           }
@@ -254,6 +263,17 @@ export default function localApiPlugin() {
             ensureDir(FILES_DIR)
             const fileName = await handleUpload(req, FILES_DIR)
             res.end(JSON.stringify({ url: `/files/${fileName}` }))
+            return
+          }
+
+          const filesMatch = url.pathname.match(/^\/api\/files\/(.+)$/)
+          if (filesMatch && method === 'DELETE') {
+            const fileName = decodeURIComponent(filesMatch[1])
+            const filePath = path.join(FILES_DIR, fileName)
+            if (fs.existsSync(filePath)) {
+              fs.unlinkSync(filePath)
+            }
+            res.end(JSON.stringify({ ok: true }))
             return
           }
 
@@ -307,8 +327,9 @@ export default function localApiPlugin() {
             }
           }
 
-          if (url.pathname.match(/^\/api\/albums\/(.+)$/) && method === 'DELETE') {
-            const name = url.pathname.match(/^\/api\/albums\/(.+)$/)[1]
+          const albumNameMatch = url.pathname.match(/^\/api\/albums\/(.+)$/)
+          if (albumNameMatch && method === 'DELETE') {
+            const name = decodeURIComponent(albumNameMatch[1])
             let albums = []
             if (fs.existsSync(ALBUMS_PATH)) {
               albums = JSON.parse(fs.readFileSync(ALBUMS_PATH, 'utf-8'))
@@ -328,7 +349,19 @@ export default function localApiPlugin() {
           if (url.pathname === '/api/upload/photo' && method === 'POST') {
             try {
               const { albumName, fileName: uploadedName } = await handlePhotoUpload(req)
-              res.end(JSON.stringify({ url: `/images/gallery/${albumName}/${uploadedName}` }))
+              const photoUrl = `/images/gallery/${albumName}/${uploadedName}`
+              // Update albums.json to include the new photo
+              let albums = []
+              if (fs.existsSync(ALBUMS_PATH)) {
+                albums = JSON.parse(fs.readFileSync(ALBUMS_PATH, 'utf-8'))
+              }
+              const album = albums.find(a => a.name === albumName)
+              if (album) {
+                if (!album.photos) album.photos = []
+                album.photos.push(photoUrl)
+                fs.writeFileSync(ALBUMS_PATH, JSON.stringify(albums, null, 2), 'utf-8')
+              }
+              res.end(JSON.stringify({ url: photoUrl }))
             } catch (e) {
               res.statusCode = 400
               res.end(JSON.stringify({ error: e.message }))

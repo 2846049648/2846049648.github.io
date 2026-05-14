@@ -9,7 +9,7 @@
         <nav class="flex items-center space-x-1 sm:space-x-2">
           <router-link to="/" class="nav-link">首页</router-link>
           <router-link to="/posts" class="nav-link">文章</router-link>
-          <router-link to="/gallery" class="nav-link">相册</router-link>
+          <router-link to="/gallery" class="nav-link">时光剪影</router-link>
           <router-link to="/downloads" class="nav-link">下载</router-link>
           <router-link to="/about" class="nav-link">关于</router-link>
           <router-link v-if="isDev" to="/admin" class="nav-link text-orange-500 font-medium">管理</router-link>
