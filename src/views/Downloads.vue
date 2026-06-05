@@ -1,6 +1,9 @@
 <template>
   <div>
-    <h2 class="text-3xl font-bold mb-2" :style="{ color: 'var(--text-primary)' }">资源下载</h2>
+    <h2 class="text-3xl font-bold mb-2 flex items-center gap-2" :style="{ color: 'var(--text-primary)' }">
+      <span class="inline-block w-1.5 h-6 rounded-full" :style="{ background: 'var(--color-primary)' }" />
+      资源下载
+    </h2>
     <p class="mb-8" :style="{ color: 'var(--text-muted)' }">实用资源与文件下载</p>
 
     <div v-if="loading" class="text-center py-16" :style="{ color: 'var(--text-light)' }">
@@ -14,11 +17,11 @@
     <div v-else class="grid gap-4">
       <div
         v-for="file in files" :key="file.name"
-        class="group rounded-xl p-5 shadow-sm hover:shadow-md transition-all border flex items-center justify-between"
-        :style="{ background: 'var(--bg-surface)', borderColor: 'var(--border-color)' }"
+        class="card-cyber p-5 flex items-center justify-between"
       >
         <div class="flex items-center space-x-4">
-          <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white shadow-sm">
+          <div class="w-10 h-10 rounded-lg flex items-center justify-center text-white shadow-sm"
+            style="background: linear-gradient(135deg, var(--color-primary), #7c3aed);">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
           </div>
           <div>
@@ -27,8 +30,7 @@
           </div>
         </div>
         <a :href="file.url" download
-          class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-          :style="{ background: 'var(--bg-muted)', color: 'var(--color-primary)' }">
+          class="btn-cyber btn-cyber-glass text-sm px-4 py-2">
           下载
         </a>
       </div>

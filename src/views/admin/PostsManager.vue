@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="flex justify-between items-center mb-6">
-      <h2 class="text-2xl font-bold">文章管理</h2>
+      <h2 class="text-2xl font-bold" style="color: #e2e8f0;">文章管理</h2>
       <router-link to="/admin/posts/new">
         <el-button type="primary">写新文章</el-button>
       </router-link>

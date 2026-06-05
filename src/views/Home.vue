@@ -1,76 +1,99 @@
 <template>
   <div>
     <!-- Hero -->
-    <section class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 text-white p-8 sm:p-16 mb-12">
-      <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMiIvPjwvZz48L2c+PC9zdmc+')] opacity-50" />
-      <div class="relative z-10">
-        <div class="flex items-center space-x-4 mb-6">
-          <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/20 flex items-center justify-center text-3xl sm:text-4xl font-bold ring-2 ring-white/40 overflow-hidden">
+    <section class="relative overflow-hidden rounded-2xl mb-12 min-h-[420px] flex items-center"
+      style="background: linear-gradient(135deg, #0a1628 0%, #0f1929 50%, #0d1a2e 100%);">
+      <!-- Animated grid overlay -->
+      <div class="absolute inset-0 opacity-20"
+        style="background-image:
+          linear-gradient(rgba(0, 229, 255, 0.1) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(0, 229, 255, 0.1) 1px, transparent 1px);
+          background-size: 40px 40px;" />
+      <!-- Glow orbs -->
+      <div class="absolute -top-32 -right-32 w-96 h-96 rounded-full opacity-10 blur-3xl"
+        style="background: radial-gradient(circle, rgba(0, 229, 255, 0.4), transparent)" />
+      <div class="absolute -bottom-32 -left-32 w-96 h-96 rounded-full opacity-10 blur-3xl"
+        style="background: radial-gradient(circle, rgba(0, 255, 65, 0.3), transparent)" />
+
+      <!-- Content -->
+      <div class="relative z-10 w-full px-8 sm:px-16 py-12 sm:py-16">
+        <div class="flex flex-col sm:flex-row items-center sm:items-start sm:space-x-6">
+          <!-- Avatar -->
+          <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-full flex-shrink-0 flex items-center justify-center text-3xl sm:text-4xl font-bold overflow-hidden mb-4 sm:mb-0"
+            style="border: 2px solid rgba(0, 229, 255, 0.3); box-shadow: 0 0 30px rgba(0, 229, 255, 0.15); background: rgba(0, 229, 255, 0.05); backdrop-filter: blur(8px);">
             <img v-if="profile.avatar" :src="profile.avatar" class="w-full h-full object-cover" />
-            <span v-else>{{ (profile.name || '我').charAt(0) }}</span>
+            <span v-else class="gradient-text">{{ (profile.name || '我').charAt(0) }}</span>
           </div>
-          <div>
-            <h1 class="text-3xl sm:text-4xl font-bold">{{ greeting }}</h1>
-            <p class="mt-2 text-blue-100 text-lg">{{ profile.bio }}</p>
+          <div class="text-center sm:text-left">
+            <h1 class="text-3xl sm:text-5xl font-bold text-white mb-2">{{ greeting }}</h1>
+            <p class="text-lg" style="color: #6b8cae;">{{ profile.bio }}</p>
+            <div class="flex flex-wrap justify-center sm:justify-start gap-3 mt-6">
+              <router-link to="/posts" class="btn-cyber btn-cyber-primary">
+                浏览文章
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+              </router-link>
+              <router-link to="/gallery" class="btn-cyber btn-cyber-glass">
+                查看相册
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+              </router-link>
+            </div>
           </div>
-        </div>
-        <div class="flex flex-wrap gap-3 mt-8">
-          <router-link to="/posts" class="inline-flex items-center px-6 py-2.5 bg-white text-blue-700 rounded-full font-medium hover:bg-blue-50 transition-colors shadow-lg shadow-black/10">
-            浏览文章
-            <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-          </router-link>
-          <router-link to="/gallery" class="inline-flex items-center px-6 py-2.5 bg-white/20 text-white rounded-full font-medium hover:bg-white/30 transition-colors backdrop-blur-sm">
-            查看相册
-            <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-          </router-link>
         </div>
       </div>
     </section>
 
     <!-- Quick links -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-12">
-      <router-link to="/posts" class="group rounded-xl p-6 shadow-sm hover:shadow-md transition-all border"
-        :style="{ background: 'var(--bg-surface)', borderColor: 'var(--border-color)' }">
-        <div class="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>
+      <router-link to="/posts" class="card-cyber p-6 group">
+        <div class="w-12 h-12 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"
+          style="background: linear-gradient(135deg, rgba(0,229,255,0.1), rgba(0,229,255,0.03)); color: var(--color-primary);">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>
         </div>
-        <h3 class="font-semibold mb-1" :style="{ color: 'var(--text-primary)' }">文章</h3>
+        <h3 class="text-lg font-semibold mb-1" :style="{ color: 'var(--text-primary)' }">文章</h3>
         <p class="text-sm" :style="{ color: 'var(--text-muted)' }">阅读最新技术分享与随笔</p>
       </router-link>
-      <router-link to="/gallery" class="group rounded-xl p-6 shadow-sm hover:shadow-md transition-all border"
-        :style="{ background: 'var(--bg-surface)', borderColor: 'var(--border-color)' }">
-        <div class="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+      <router-link to="/gallery" class="card-cyber p-6 group">
+        <div class="w-12 h-12 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"
+          style="background: linear-gradient(135deg, rgba(0,255,65,0.1), rgba(0,255,65,0.03)); color: var(--color-accent);">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
         </div>
-        <h3 class="font-semibold mb-1" :style="{ color: 'var(--text-primary)' }">时光剪影</h3>
+        <h3 class="text-lg font-semibold mb-1" :style="{ color: 'var(--text-primary)' }">时光剪影</h3>
         <p class="text-sm" :style="{ color: 'var(--text-muted)' }">浏览生活记录与精彩瞬间</p>
       </router-link>
-      <router-link to="/downloads" class="group rounded-xl p-6 shadow-sm hover:shadow-md transition-all border"
-        :style="{ background: 'var(--bg-surface)', borderColor: 'var(--border-color)' }">
-        <div class="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/50 text-green-600 dark:text-green-400 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+      <router-link to="/downloads" class="card-cyber p-6 group">
+        <div class="w-12 h-12 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"
+          style="background: linear-gradient(135deg, rgba(255,171,0,0.1), rgba(255,171,0,0.03)); color: var(--color-warning);">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
         </div>
-        <h3 class="font-semibold mb-1" :style="{ color: 'var(--text-primary)' }">下载</h3>
+        <h3 class="text-lg font-semibold mb-1" :style="{ color: 'var(--text-primary)' }">下载</h3>
         <p class="text-sm" :style="{ color: 'var(--text-muted)' }">获取实用资源与文件</p>
       </router-link>
     </div>
 
     <!-- Recent posts -->
     <section v-if="recentPosts.length">
-      <h2 class="text-xl font-bold mb-4" :style="{ color: 'var(--text-primary)' }">最近更新</h2>
-      <div class="space-y-3">
+      <h2 class="text-xl font-bold mb-5 flex items-center gap-2" :style="{ color: 'var(--text-primary)' }">
+        <span class="inline-block w-1.5 h-5 rounded-full" :style="{ background: 'var(--color-primary)' }" />
+        最近更新
+      </h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <router-link
           v-for="post in recentPosts"
           :key="post.slug"
           :to="`/posts/${post.slug}`"
-          class="block rounded-xl p-5 shadow-sm hover:shadow-md transition-all border"
-          :style="{ background: 'var(--bg-surface)', borderColor: 'var(--border-color)' }"
+          class="card-cyber p-5 flex flex-col justify-between"
         >
-          <div class="flex items-center justify-between">
-            <h3 class="font-medium" :style="{ color: 'var(--text-primary)' }">{{ post.title }}</h3>
-            <span class="text-sm" :style="{ color: 'var(--text-light)' }">{{ post.date }}</span>
+          <div>
+            <div class="flex items-center gap-2 mb-2">
+              <span class="badge-cyber" v-if="post.category">{{ post.category }}</span>
+              <span class="text-xs" :style="{ color: 'var(--text-light)' }">{{ post.date }}</span>
+            </div>
+            <h3 class="font-semibold mb-1 group-hover:text-[var(--color-primary)] transition-colors" :style="{ color: 'var(--text-primary)' }">{{ post.title }}</h3>
+            <p v-if="post.excerpt" class="text-sm line-clamp-2" :style="{ color: 'var(--text-muted)' }">{{ post.excerpt }}</p>
           </div>
-          <p v-if="post.excerpt" class="text-sm mt-1 line-clamp-1" :style="{ color: 'var(--text-muted)' }">{{ post.excerpt }}</p>
+          <div v-if="post.tags?.length" class="flex flex-wrap gap-1.5 mt-3">
+            <span v-for="tag in post.tags" :key="tag" class="tag-cyber">{{ tag }}</span>
+          </div>
         </router-link>
       </div>
     </section>
@@ -103,7 +126,7 @@ onMounted(async () => {
     if (profileRes.ok) profile.value = await profileRes.json()
     if (postsRes.ok) {
       const all = await postsRes.json()
-      recentPosts.value = all.slice(0, 5)
+      recentPosts.value = all.slice(0, 4)
     }
   } catch {}
 })

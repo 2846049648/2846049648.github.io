@@ -18,7 +18,10 @@
         <!-- TOC Sidebar (desktop, left) -->
         <div v-if="headings.length > 1" class="hidden lg:block w-56 flex-shrink-0">
           <div class="sticky top-24">
-            <h4 class="text-xs font-semibold uppercase tracking-wider mb-3" :style="{ color: 'var(--text-light)' }">目录</h4>
+            <h4 class="text-xs font-semibold uppercase tracking-wider mb-3 flex items-center gap-2" :style="{ color: 'var(--text-light)' }">
+              <span class="inline-block w-1 h-4 rounded-full" :style="{ background: 'var(--color-primary)' }" />
+              目录
+            </h4>
             <nav>
               <a
                 v-for="h in headings" :key="h.id"
@@ -35,26 +38,27 @@
           <!-- Article header -->
           <div class="mb-8">
             <div class="flex items-center gap-3 text-sm mb-3" :style="{ color: 'var(--text-muted)' }">
-              <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
+              <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
+                style="background: linear-gradient(135deg, var(--color-primary), #7c3aed);">
                 {{ (profile.name || '作').charAt(0).toUpperCase() }}
               </div>
               <span>{{ profile.name }}</span>
-              <span class="text-gray-300">·</span>
+              <span class="opacity-30">·</span>
               <span>{{ post.date }}</span>
-              <span v-if="post.category" class="ml-auto category-badge">{{ post.category }}</span>
+              <span v-if="post.category" class="ml-auto badge-cyber">{{ post.category }}</span>
             </div>
             <h1 class="text-3xl sm:text-4xl font-bold leading-tight" :style="{ color: 'var(--text-primary)' }">{{ post.title }}</h1>
             <div v-if="post.tags && post.tags.length" class="flex flex-wrap gap-2 mt-4">
               <router-link
                 v-for="tag in post.tags" :key="tag"
                 :to="`/posts?tag=${encodeURIComponent(tag)}`"
-                class="tag-pill"
+                class="tag-cyber"
               >{{ tag }}</router-link>
             </div>
           </div>
 
           <!-- Article body -->
-          <article class="rounded-2xl shadow-sm border p-6 sm:p-10" :style="{ background: 'var(--bg-surface)', borderColor: 'var(--border-color)' }">
+          <article class="card-cyber p-6 sm:p-10">
             <div class="prose max-w-none" v-html="renderedContent" ref="articleRef" />
           </article>
 
@@ -63,8 +67,7 @@
             <router-link
               v-if="prevPost"
               :to="`/posts/${prevPost.slug}`"
-              class="flex-1 rounded-xl border p-4 transition-all hover:shadow-md"
-              :style="{ background: 'var(--bg-surface)', borderColor: 'var(--border-color)' }"
+              class="flex-1 card-cyber p-4"
             >
               <div class="text-xs mb-1" :style="{ color: 'var(--text-light)' }">← 上一篇</div>
               <div class="font-medium truncate" :style="{ color: 'var(--text-primary)' }">{{ prevPost.title }}</div>
@@ -73,8 +76,7 @@
             <router-link
               v-if="nextPost"
               :to="`/posts/${nextPost.slug}`"
-              class="flex-1 rounded-xl border p-4 text-right transition-all hover:shadow-md"
-              :style="{ background: 'var(--bg-surface)', borderColor: 'var(--border-color)' }"
+              class="flex-1 card-cyber p-4 text-right"
             >
               <div class="text-xs mb-1" :style="{ color: 'var(--text-light)' }">下一篇 →</div>
               <div class="font-medium truncate" :style="{ color: 'var(--text-primary)' }">{{ nextPost.title }}</div>
@@ -83,7 +85,7 @@
           </div>
 
           <!-- Comments -->
-          <div class="mt-8 rounded-2xl shadow-sm border p-6 sm:p-10" :style="{ background: 'var(--bg-surface)', borderColor: 'var(--border-color)' }">
+          <div class="mt-8 card-cyber p-6 sm:p-10">
             <h3 class="text-lg font-semibold mb-4" :style="{ color: 'var(--text-primary)' }">评论</h3>
             <div v-if="!repoSet" class="text-sm" :style="{ color: 'var(--text-light)' }">
               评论功能未启用（需配置 <code class="bg-gray-100 dark:bg-gray-800 px-1 rounded text-xs">VITE_UTTERANCES_REPO</code>）
@@ -265,7 +267,7 @@ function loadUtterances() {
   script.setAttribute('repo', repo)
   script.setAttribute('issue-term', 'pathname')
   script.setAttribute('label', 'comments')
-  script.setAttribute('theme', 'github-light')
+  script.setAttribute('theme', 'github-dark')
   script.setAttribute('crossorigin', 'anonymous')
   script.async = true
   container.appendChild(script)
@@ -274,30 +276,5 @@ function loadUtterances() {
 </script>
 
 <style scoped>
-.category-badge {
-  font-size: 0.75rem;
-  padding: 0.125rem 0.5rem;
-  border-radius: 9999px;
-  background: var(--bg-muted);
-  color: var(--text-muted);
-}
-.tag-pill {
-  font-size: 0.75rem;
-  padding: 0.25rem 0.625rem;
-  border-radius: 9999px;
-  background: #eff6ff;
-  color: #2563eb;
-  text-decoration: none;
-  transition: all 0.2s;
-}
-.tag-pill:hover {
-  background: #dbeafe;
-}
-.dark .tag-pill {
-  background: rgba(37, 99, 235, 0.15);
-  color: #60a5fa;
-}
-.dark .tag-pill:hover {
-  background: rgba(37, 99, 235, 0.25);
-}
+/* No scoped styles needed — using global card-cyber and tag-cyber classes */
 </style>

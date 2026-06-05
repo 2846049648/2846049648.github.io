@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="flex justify-between items-center mb-6">
-      <h2 class="text-2xl font-bold">文件库</h2>
+      <h2 class="text-2xl font-bold" style="color: #e2e8f0;">文件库</h2>
       <el-upload
         :action="uploadUrl"
         :show-file-list="false"
@@ -11,7 +11,7 @@
         <el-button type="primary">上传文件</el-button>
       </el-upload>
     </div>
-    <div v-if="loading" class="text-center py-12 text-gray-500">加载中...</div>
+    <div v-if="loading" class="text-center py-12" style="color: #6b8cae;">加载中...</div>
     <el-table :data="files" style="width: 100%" v-else-if="files.length > 0">
       <el-table-column prop="name" label="文件名" />
       <el-table-column prop="size" label="大小" width="120" />
@@ -25,7 +25,7 @@
         </template>
       </el-table-column>
     </el-table>
-    <div v-else class="text-gray-500 text-center py-12">
+    <div v-else class="text-center py-12" style="color: #6b8cae;">
       暂无文件，点击上方按钮上传
     </div>
   </div>

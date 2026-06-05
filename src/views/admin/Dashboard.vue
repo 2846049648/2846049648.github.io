@@ -1,22 +1,25 @@
 <template>
   <div>
-    <h2 class="text-2xl font-bold mb-6">管理概览</h2>
+    <h2 class="text-2xl font-bold mb-6 flex items-center gap-2" style="color: #1e293b;">
+      <span class="inline-block w-1.5 h-6 rounded-full" style="background: var(--color-primary);" />
+      管理概览
+    </h2>
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-      <el-card>
+      <el-card shadow="sm">
         <p class="text-gray-500 text-sm">文章总数</p>
-        <p class="text-3xl font-bold mt-2">{{ stats.posts }}</p>
+        <p class="text-3xl font-bold mt-2" style="color: #2563eb;">{{ stats.posts }}</p>
       </el-card>
-      <el-card>
+      <el-card shadow="sm">
         <p class="text-gray-500 text-sm">相册</p>
-        <p class="text-3xl font-bold mt-2">{{ stats.albums }}</p>
+        <p class="text-3xl font-bold mt-2" style="color: #059669;">{{ stats.albums }}</p>
       </el-card>
-      <el-card>
+      <el-card shadow="sm">
         <p class="text-gray-500 text-sm">媒体文件</p>
-        <p class="text-3xl font-bold mt-2">{{ stats.media }}</p>
+        <p class="text-3xl font-bold mt-2" style="color: #d97706;">{{ stats.media }}</p>
       </el-card>
-      <el-card>
+      <el-card shadow="sm">
         <p class="text-gray-500 text-sm">下载文件</p>
-        <p class="text-3xl font-bold mt-2">{{ stats.files }}</p>
+        <p class="text-3xl font-bold mt-2" style="color: #dc2626;">{{ stats.files }}</p>
       </el-card>
     </div>
     <el-alert
@@ -25,8 +28,8 @@
       :closable="false"
       show-icon
     />
-    <div class="mt-6 p-6 bg-white rounded-lg shadow-sm">
-      <h3 class="text-lg font-semibold mb-4">一键发布</h3>
+    <div class="mt-6 p-6 bg-white rounded-lg border shadow-sm">
+      <h3 class="text-lg font-semibold mb-4" style="color: #1e293b;">一键发布</h3>
       <p class="text-gray-600 text-sm mb-4">执行构建并推送至 GitHub Pages</p>
       <el-button type="primary" size="large" :loading="publishing" @click="publish">
         {{ publishing ? '发布中...' : '一键发布到 GitHub Pages' }}

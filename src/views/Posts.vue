@@ -1,6 +1,9 @@
 <template>
   <div>
-    <h2 class="text-3xl font-bold mb-2" :style="{ color: 'var(--text-primary)' }">文章</h2>
+    <h2 class="text-3xl font-bold mb-2 flex items-center gap-2" :style="{ color: 'var(--text-primary)' }">
+      <span class="inline-block w-1.5 h-6 rounded-full" :style="{ background: 'var(--color-primary)' }" />
+      文章
+    </h2>
     <p class="mb-6" :style="{ color: 'var(--text-muted)' }">分享技术、思考与生活</p>
 
     <!-- Search bar -->
@@ -12,20 +15,26 @@
         v-model="searchQuery"
         type="text"
         placeholder="搜索文章..."
-        class="w-full pl-10 pr-4 py-2.5 rounded-xl border text-sm outline-none transition-all focus:ring-2 focus:ring-blue-500/30"
-        :style="{ background: 'var(--bg-surface)', borderColor: 'var(--border-color)', color: 'var(--text-primary)' }"
+        class="w-full pl-10 pr-4 py-2.5 rounded-xl border text-sm outline-none transition-all"
+        :style="{
+          background: 'var(--bg-surface)',
+          borderColor: 'var(--border-color)',
+          color: 'var(--text-primary)'
+        }"
+        @focus="$event.target.style.borderColor = 'var(--border-glow)'"
+        @blur="$event.target.style.borderColor = 'var(--border-color)'"
       />
     </div>
 
     <!-- Filter chips: categories -->
     <div class="flex flex-wrap gap-2 mb-3">
       <button
-        :class="activeCategory === '' ? 'filter-chip active' : 'filter-chip'"
+        :class="'filter-chip ' + (activeCategory === '' ? 'active' : '')"
         @click="activeCategory = ''"
       >全部</button>
       <button
         v-for="cat in categories" :key="cat"
-        :class="activeCategory === cat ? 'filter-chip active' : 'filter-chip'"
+        :class="'filter-chip ' + (activeCategory === cat ? 'active' : '')"
         @click="activeCategory = cat"
       >{{ cat }}</button>
     </div>
@@ -34,7 +43,7 @@
     <div v-if="allTags.length" class="flex flex-wrap gap-1.5 mb-8">
       <span
         v-for="tag in allTags" :key="tag"
-        :class="activeTag === tag ? 'tag-chip active' : 'tag-chip'"
+        :class="'tag-chip ' + (activeTag === tag ? 'active' : '')"
         @click="activeTag = activeTag === tag ? '' : tag"
       >{{ tag }}</span>
     </div>
@@ -51,12 +60,12 @@
     <div v-else class="space-y-5">
       <article
         v-for="post in filteredPosts" :key="post.slug"
-        class="rounded-xl p-6 shadow-sm hover:shadow-md transition-all border"
-        :style="{ background: 'var(--bg-surface)', borderColor: 'var(--border-color)' }"
+        class="card-cyber p-6"
       >
         <router-link :to="`/posts/${post.slug}`" class="block">
           <div class="flex items-start space-x-4">
-            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex-shrink-0 flex items-center justify-center text-white text-sm font-bold shadow-sm">
+            <div class="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center text-white text-sm font-bold shadow-sm"
+              style="background: linear-gradient(135deg, var(--color-primary), #7c3aed);">
               {{ (profile.name || '作').charAt(0).toUpperCase() }}
             </div>
             <div class="flex-1 min-w-0">
@@ -64,14 +73,14 @@
                 <span class="text-xs" :style="{ color: 'var(--text-muted)' }">{{ profile.name }}</span>
                 <span class="text-gray-300">·</span>
                 <span class="text-xs" :style="{ color: 'var(--text-muted)' }">{{ post.date }}</span>
-                <span v-if="post.category" class="ml-auto category-badge">{{ post.category }}</span>
+                <span v-if="post.category" class="ml-auto badge-cyber">{{ post.category }}</span>
               </div>
               <h3 class="text-lg font-semibold transition-colors" :style="{ color: 'var(--text-primary)' }">
                 {{ post.title }}
               </h3>
               <p v-if="post.excerpt" class="text-sm mt-1.5 line-clamp-2" :style="{ color: 'var(--text-muted)' }" v-html="highlightMatch(post.excerpt)"></p>
               <div class="flex flex-wrap gap-1.5 mt-3">
-                <span v-for="tag in post.tags" :key="tag" class="tag-pill">{{ tag }}</span>
+                <span v-for="tag in post.tags" :key="tag" class="tag-cyber">{{ tag }}</span>
               </div>
             </div>
           </div>
@@ -142,7 +151,6 @@ onMounted(async () => {
     posts.value = await postsRes.json()
     if (profileRes.ok) profile.value = await profileRes.json()
 
-    // Read ?tag= query param
     if (route.query.tag) {
       activeTag.value = route.query.tag
     }
@@ -166,16 +174,17 @@ onMounted(async () => {
   background: transparent;
 }
 .filter-chip:hover {
-  border-color: #93c5fd;
-  color: #2563eb;
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 .filter-chip.active {
-  background: #2563eb;
-  color: white;
-  border-color: #2563eb;
+  background: var(--color-primary);
+  color: #000;
+  border-color: var(--color-primary);
+  font-weight: 600;
 }
 .filter-chip.active:hover {
-  background: #1d4ed8;
+  opacity: 0.9;
 }
 .tag-chip {
   font-size: 0.75rem;
@@ -191,31 +200,8 @@ onMounted(async () => {
   color: var(--text-primary);
 }
 .tag-chip.active {
-  background: #eff6ff;
-  color: #2563eb;
-  border-color: #93c5fd;
-}
-.dark .tag-chip.active {
-  background: rgba(37, 99, 235, 0.15);
-  color: #60a5fa;
-  border-color: rgba(96, 165, 250, 0.3);
-}
-.category-badge {
-  font-size: 0.75rem;
-  padding: 0.125rem 0.5rem;
-  border-radius: 9999px;
-  background: var(--bg-muted);
-  color: var(--text-muted);
-}
-.tag-pill {
-  font-size: 0.75rem;
-  padding: 0.125rem 0.5rem;
-  border-radius: 9999px;
-  background: #eff6ff;
-  color: #2563eb;
-}
-.dark .tag-pill {
-  background: rgba(37, 99, 235, 0.15);
-  color: #60a5fa;
+  background: rgba(0, 229, 255, 0.08);
+  color: var(--color-primary);
+  border-color: rgba(0, 229, 255, 0.2);
 }
 </style>

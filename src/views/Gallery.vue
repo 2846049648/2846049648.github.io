@@ -1,6 +1,9 @@
 <template>
   <div>
-    <h2 class="text-3xl font-bold mb-2" :style="{ color: 'var(--text-primary)' }">时光剪影</h2>
+    <h2 class="text-3xl font-bold mb-2 flex items-center gap-2" :style="{ color: 'var(--text-primary)' }">
+      <span class="inline-block w-1.5 h-6 rounded-full" :style="{ background: 'var(--color-primary)' }" />
+      时光剪影
+    </h2>
     <p class="mb-8" :style="{ color: 'var(--text-muted)' }">记录生活中的美好瞬间</p>
 
     <div v-if="loading" class="text-center py-16" :style="{ color: 'var(--text-light)' }">
@@ -16,8 +19,7 @@
       <div v-if="!currentAlbum" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <div
           v-for="album in albums" :key="album.name"
-          class="group rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all border cursor-pointer"
-          :style="{ background: 'var(--bg-surface)', borderColor: 'var(--border-color)' }"
+          class="card-cyber overflow-hidden cursor-pointer group"
           role="button"
           tabindex="0"
           @click="openAlbum(album)"
@@ -28,13 +30,14 @@
             <div v-else class="w-full h-full flex items-center justify-center" :style="{ color: 'var(--text-light)' }">
               <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
             </div>
-            <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-            <div class="absolute bottom-3 right-3 bg-black/50 text-white text-xs px-2 py-1 rounded-full pointer-events-none">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+            <div class="absolute bottom-3 right-3 text-white text-xs px-2 py-1 rounded-full pointer-events-none"
+              style="background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.1);">
               {{ album.photos ? album.photos.length : 0 }} 张
             </div>
           </div>
           <div class="p-4">
-            <h3 class="font-semibold group-hover:text-blue-600 transition-colors" :style="{ color: 'var(--text-primary)' }">{{ album.title }}</h3>
+            <h3 class="font-semibold transition-colors" :class="'group-hover:text-[var(--color-primary)]'" :style="{ color: 'var(--text-primary)' }">{{ album.title }}</h3>
             <p v-if="album.description" class="text-sm mt-1 line-clamp-1" :style="{ color: 'var(--text-muted)' }">{{ album.description }}</p>
           </div>
         </div>
@@ -49,7 +52,6 @@
         <div class="mb-6">
           <h3 class="text-2xl font-bold" :style="{ color: 'var(--text-primary)' }">{{ currentAlbum.title }}</h3>
           <p v-if="currentAlbum.description" class="mt-1" :style="{ color: 'var(--text-muted)' }">{{ currentAlbum.description }}</p>
-          <!-- Photo essay (album.story as markdown) -->
           <div v-if="currentAlbum.story" class="mt-4 prose prose-sm max-w-none" :style="{ color: 'var(--text-muted)' }" v-html="renderedStory" />
         </div>
 
@@ -67,8 +69,8 @@
               class="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500"
               loading="lazy"
             />
-            <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
-            <div v-if="getPhotoCaption(photo)" class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3 pt-8 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+            <div v-if="getPhotoCaption(photo)" class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3 pt-8 opacity-0 group-hover:opacity-100 transition-opacity">
               <p class="text-white text-sm leading-tight">{{ getPhotoCaption(photo) }}</p>
             </div>
           </div>
@@ -79,14 +81,14 @@
     <!-- PhotoSwipe lightbox overlay -->
     <div
       v-if="psVisible"
-      class="fixed inset-0 z-[999] bg-black flex flex-col"
+      class="fixed inset-0 z-[999] bg-black/95 flex flex-col"
       @keydown="onKeydown"
       tabindex="0"
       ref="psContainerRef"
     >
       <!-- Top bar -->
-      <div class="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4 bg-gradient-to-b from-black/60 to-transparent">
-        <div class="text-white text-sm">
+      <div class="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4 bg-gradient-to-b from-black/80 to-transparent">
+        <div class="text-white text-sm" style="font-family: 'JetBrains Mono', monospace;">
           {{ psIndex + 1 }} / {{ currentAlbum?.photos?.length || 0 }}
         </div>
         <button @click="closePs" class="text-white/80 hover:text-white text-2xl leading-none p-1">&times;</button>
@@ -102,7 +104,6 @@
           @load="loadExif"
           ref="psImgRef"
         />
-        <!-- Caption -->
         <div v-if="getPhotoCaption(currentAlbum?.photos?.[psIndex])" class="absolute bottom-16 left-1/2 -translate-x-1/2 text-white/80 text-sm text-center px-4 max-w-[70vw] drop-shadow-lg">
           {{ getPhotoCaption(currentAlbum?.photos?.[psIndex]) }}
         </div>
@@ -110,7 +111,8 @@
         <!-- EXIF info overlay -->
         <div
           v-if="exifData"
-          class="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/70 backdrop-blur-sm text-white text-xs px-4 py-2 rounded-lg flex flex-wrap gap-x-4 gap-y-1 justify-center max-w-[90vw]"
+          class="absolute bottom-4 left-1/2 -translate-x-1/2 backdrop-blur-sm text-white text-xs px-4 py-2 rounded-lg flex flex-wrap gap-x-4 gap-y-1 justify-center max-w-[90vw]"
+          style="background: rgba(0,0,0,0.7); border: 1px solid rgba(255,255,255,0.05);"
         >
           <span v-if="exifData.Make || exifData.Model">
             {{ [exifData.Make, exifData.Model].filter(Boolean).join(' ') }}
@@ -121,7 +123,8 @@
           <span v-if="exifData.FocalLength">{{ exifData.FocalLength }}mm</span>
           <span v-if="exifData.LensModel">{{ exifData.LensModel }}</span>
         </div>
-        <div v-else-if="exifLoading" class="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/50 text-white/60 text-xs px-3 py-1.5 rounded-lg">
+        <div v-else-if="exifLoading" class="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/60 text-xs px-3 py-1.5 rounded-lg"
+          style="background: rgba(0,0,0,0.5);">
           读取 EXIF...
         </div>
       </div>
@@ -240,7 +243,6 @@ async function loadExif() {
     })
     if (data) {
       exifData.value = data
-      // Format FNumber
       if (data.FNumber) {
         const n = parseFloat(data.FNumber)
         data.FNumber = Number.isInteger(n) ? n.toFixed(1) : String(n)

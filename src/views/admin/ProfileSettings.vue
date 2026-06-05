@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h2 class="text-2xl font-bold mb-6">个人资料设置</h2>
+    <h2 class="text-2xl font-bold mb-6" style="color: #e2e8f0;">个人资料设置</h2>
     <el-form label-width="100" class="max-w-xl">
       <el-form-item label="昵称">
         <el-input v-model="form.name" placeholder="你的昵称" />

@@ -1,20 +1,20 @@
 <template>
   <div>
     <div class="flex justify-between items-center mb-6">
-      <h2 class="text-2xl font-bold">相册管理</h2>
+      <h2 class="text-2xl font-bold" style="color: #1e293b;">相册管理</h2>
       <el-button type="primary" @click="showCreate">新建相册</el-button>
     </div>
 
     <!-- Album list -->
-    <div v-if="loading" class="text-center py-12" :style="{ color: 'var(--text-light)' }">加载中...</div>
-    <div v-else-if="albums.length === 0" class="text-center py-12" :style="{ color: 'var(--text-light)' }">暂无相册，点击新建</div>
+    <div v-if="loading" class="text-center py-12" style="color: #94a3b8;">加载中...</div>
+    <div v-else-if="albums.length === 0" class="text-center py-12" style="color: #94a3b8;">暂无相册，点击新建</div>
     <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <el-card v-for="album in albums" :key="album.name" class="!p-0" shadow="sm">
         <div class="p-4">
           <div class="flex justify-between items-start mb-3">
             <div>
-              <h3 class="font-semibold" :style="{ color: 'var(--text-primary)' }">{{ album.title }}</h3>
-              <p class="text-sm" :style="{ color: 'var(--text-muted)' }">{{ album.photos?.length || 0 }} 张照片</p>
+              <h3 class="font-semibold" style="color: #1e293b;">{{ album.title }}</h3>
+              <p class="text-sm text-gray-500">{{ album.photos?.length || 0 }} 张照片</p>
               <p v-if="album.story" class="text-xs mt-1" style="color: #8b5cf6;">📝 包含摄影随笔</p>
             </div>
             <div class="flex gap-1">
@@ -22,7 +22,7 @@
               <el-button type="danger" size="small" :loading="deleting === album.name" @click="remove(album.name)">删除</el-button>
             </div>
           </div>
-          <div class="text-xs mb-2" :style="{ color: 'var(--text-muted)' }">{{ album.description || '无描述' }}</div>
+          <div class="text-xs mb-2 text-gray-400">{{ album.description || '无描述' }}</div>
           <!-- Photos preview -->
           <div v-if="album.photos?.length" class="flex gap-1 flex-wrap mb-3">
             <div
@@ -77,7 +77,7 @@
             :rows="4"
             placeholder="用 Markdown 讲述照片背后的故事（可选）"
           />
-          <div class="text-xs mt-1" :style="{ color: 'var(--text-light)' }">支持 Markdown 格式</div>
+          <div class="text-xs mt-1" style="color: #94a3b8;">支持 Markdown 格式</div>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -93,7 +93,7 @@
         <div
           v-for="(photo, idx) in photoAlbum.photos" :key="idx"
           class="flex items-center gap-3 p-2 rounded-lg border"
-          :style="{ borderColor: 'var(--border-color)' }"
+          style="border-color: #e2e8f0;"
         >
           <img :src="getPhotoUrl(photo)" class="w-16 h-16 object-cover rounded flex-shrink-0" />
           <div class="flex-1 min-w-0">
@@ -185,7 +185,6 @@ async function save() {
   try {
     const payload = {
       ...form.value,
-      // 没设封面就用第一张照片
       cover: form.value.cover || (form.value.photos?.length ? getPhotoUrl(form.value.photos[0]) : ''),
     }
 
@@ -256,7 +255,6 @@ async function savePhotoCaptions() {
       body: JSON.stringify(photoAlbum.value),
     })
     if (res.ok) {
-      // Delete removed photo files from disk
       const currentUrls = new Set(photoAlbum.value.photos.map(p => getPhotoUrl(p)))
       for (const url of originalPhotos) {
         if (url && !currentUrls.has(url)) {

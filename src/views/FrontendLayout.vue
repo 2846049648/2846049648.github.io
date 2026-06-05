@@ -1,9 +1,18 @@
 <template>
-  <div class="min-h-screen flex flex-col" :class="{ 'bg-[var(--bg-body)]': true }">
+  <div
+    class="min-h-screen flex flex-col scanline"
+    :class="{ 'dark': isDark }"
+  >
+    <!-- Grid overlay (dark mode only) -->
+    <div v-if="isDark" class="fixed inset-0 pointer-events-none select-none" style="z-index: -1;">
+      <div class="absolute inset-0"
+        style="background-image: linear-gradient(rgba(0,229,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(0,229,255,0.04) 1px, transparent 1px); background-size: 48px 48px;" />
+    </div>
+
     <!-- Sticky Header -->
     <header class="sticky top-0 z-50" :style="{ background: 'var(--header-bg)', borderBottom: '1px solid var(--header-border)' }">
       <div class="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-        <router-link to="/" class="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+        <router-link to="/" class="text-xl font-bold gradient-text">
           {{ profile.name || '我的空间' }}
         </router-link>
         <nav class="flex items-center space-x-1 sm:space-x-2">
@@ -12,12 +21,17 @@
           <router-link to="/gallery" class="nav-link">时光剪影</router-link>
           <router-link to="/downloads" class="nav-link">下载</router-link>
           <router-link to="/about" class="nav-link">关于</router-link>
-          <router-link v-if="isDev" to="/admin" class="nav-link text-orange-500 font-medium">管理</router-link>
+          <router-link v-if="isDev" to="/admin" class="nav-link text-orange-500 font-medium relative">
+            <span class="relative">
+              管理
+              <span class="absolute -top-0.5 -right-2 w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" />
+            </span>
+          </router-link>
           <!-- Search button -->
           <button
             @click="showSearch = true"
             class="p-2 rounded-lg transition-all"
-            :class="isDark ? 'text-gray-400 hover:bg-gray-700' : 'text-gray-500 hover:bg-gray-100'"
+            :class="isDark ? 'text-gray-400 hover:bg-gray-700/50' : 'text-gray-500 hover:bg-gray-100'"
             title="搜索文章"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -28,7 +42,7 @@
           <button
             @click="toggleDark"
             class="p-2 rounded-lg transition-all"
-            :class="isDark ? 'text-yellow-400 hover:bg-gray-700' : 'text-gray-500 hover:bg-gray-100'"
+            :class="isDark ? 'text-yellow-400 hover:bg-gray-700/50' : 'text-gray-500 hover:bg-gray-100'"
             :title="isDark ? '切换亮色模式' : '切换暗色模式'"
           >
             <svg v-if="isDark" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -51,6 +65,11 @@
     <footer class="border-t" :style="{ borderColor: 'var(--border-color)', background: 'var(--bg-surface)' }">
       <div class="max-w-5xl mx-auto px-4 sm:px-6 py-8 text-center text-sm space-y-1" :style="{ color: 'var(--text-light)' }">
         <p>&copy; {{ new Date().getFullYear() }} {{ profile.name || 'My Site' }}. All rights reserved.</p>
+        <p class="flex items-center justify-center gap-1.5">
+          <span class="inline-block w-1.5 h-1.5 rounded-full" :style="{ background: 'var(--color-primary)' }" />
+          <span>Built with Vue</span>
+          <span class="inline-block w-1.5 h-1.5 rounded-full" :style="{ background: 'var(--color-accent)' }" />
+        </p>
         <p v-if="isDev">
           <router-link to="/admin" class="hover:underline" :style="{ color: '#f97316' }">开发者模式 — 进入管理面板</router-link>
         </p>
@@ -92,12 +111,8 @@ onMounted(async () => {
   background: var(--bg-surface-hover);
 }
 .nav-link.router-link-active {
-  color: #2563eb;
-  background: #eff6ff;
+  color: var(--color-primary);
+  background: rgba(0, 229, 255, 0.08);
   font-weight: 500;
-}
-.dark .nav-link.router-link-active {
-  background: rgba(37, 99, 235, 0.15);
-  color: #60a5fa;
 }
 </style>
