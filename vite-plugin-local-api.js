@@ -33,6 +33,47 @@ function toWebpName(name) {
   return name.replace(/\.(jpe?g|png|gif|webp|avif|bmp|tiff?)$/i, '.webp')
 }
 
+// Node decodes multipart headers as latin1, so a UTF-8 filename sent by the
+// browser arrives with each byte widened to a latin1 char ("测试" -> "æµè¯").
+// Re-decode it back to UTF-8 when the bytes form valid UTF-8.
+function decodeUtf8Filename(name) {
+  const utf8 = Buffer.from(name, 'latin1').toString('utf8')
+  return utf8.includes('\uFFFD') ? name : utf8
+}
+
+// Keep the original filename, dropping only what is illegal on disk or unsafe
+// in a path. Spaces / CJK are kept (URLs are percent-encoded when emitted).
+function sanitizeFileName(filename) {
+  const raw = decodeUtf8Filename(path.basename(String(filename || '').replace(/\\/g, '/')))
+  let name = raw
+    .replace(/[\u0000-\u001f\u007f]/g, '')  // control chars (0x00-0x1F, 0x7F)
+    .replace(/[\\/:*?"<>|]/g, '')          // illegal on common filesystems
+    .replace(/^\.+/, '')                   // no hidden / dot-prefixed names
+    .trim()
+  if (!name) name = 'file'
+  if (name.length > 200) {
+    const ext = path.extname(name)
+    name = name.slice(0, 200 - ext.length) + ext
+  }
+  return name
+}
+
+// Never overwrite: if `name` already exists in `dir`, append -1, -2, ... before
+// the extension and return the final on-disk path.
+function uniquePath(dir, name) {
+  const ext = path.extname(name)
+  const base = name.slice(0, name.length - ext.length) || name
+  let candidate = name
+  for (let i = 1; fs.existsSync(path.join(dir, candidate)); i++) {
+    candidate = `${base}-${i}${ext}`
+  }
+  return path.join(dir, candidate)
+}
+
+function urlFor(prefix, name) {
+  return `${prefix}${encodeURIComponent(name)}`
+}
+
 function parseFrontmatter(text) {
   const match = text.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/)
   if (!match) return { data: {}, content: text }
@@ -95,7 +136,7 @@ function getDownloadFiles() {
     const size = stat.size > 1024 * 1024
       ? (stat.size / 1024 / 1024).toFixed(1) + ' MB'
       : (stat.size / 1024).toFixed(1) + ' KB'
-    return { name: file, size, url: `/files/${file}` }
+    return { name: file, size, url: `/files/${encodeURIComponent(file)}` }
   })
 }
 
@@ -110,34 +151,54 @@ function readJsonBody(req) {
   })
 }
 
-function handleUpload(req, uploadDir) {
+function handleUpload(req, uploadDir, { optimize = false } = {}) {
   return new Promise((resolve, reject) => {
     const busboy = Busboy({ headers: req.headers })
-    let resolved = false
+    let settled = false
+    let sawFile = false
 
     busboy.on('file', (fieldname, file, { filename }) => {
-      const safeName = Date.now() + '-' + filename.replace(/[^a-zA-Z0-9._-]/g, '')
-      const webpName = toWebpName(safeName)
+      if (!filename) { file.resume(); return }
+      sawFile = true
+
+      // Download library (optimize=false): keep the original file byte-for-byte
+      // under its original name (dedupe -1/-2… when the name is taken).
+      // Image library (optimize=true): compress to webp under a unique name.
+      let dest, finalName
+      if (optimize) {
+        finalName = toWebpName(Date.now() + '-' + filename.replace(/[^a-zA-Z0-9._-]/g, ''))
+        dest = path.join(uploadDir, finalName)
+      } else {
+        dest = uniquePath(uploadDir, sanitizeFileName(filename))
+        finalName = path.basename(dest)
+      }
+
       const chunks = []
       file.on('data', (data) => chunks.push(data))
       file.on('end', async () => {
-        const buf = Buffer.concat(chunks)
         try {
-          const optimized = await optimizeImage(buf)
-          fs.writeFileSync(path.join(uploadDir, webpName), optimized)
-          if (!resolved) { resolved = true; resolve(webpName) }
+          const buf = Buffer.concat(chunks)
+          const out = optimize ? await optimizeImage(buf) : buf
+          fs.writeFileSync(dest, out)
+          if (!settled) { settled = true; resolve(finalName) }
         } catch (err) {
-          if (!resolved) { resolved = true; reject(err) }
+          if (!settled) { settled = true; reject(err) }
         }
+      })
+      file.on('error', (err) => {
+        if (!settled) { settled = true; reject(err) }
       })
     })
 
-    busboy.on('finish', () => {
-      if (!resolved) { resolved = true; reject(new Error('no file')) }
+    busboy.on('error', (err) => {
+      if (!settled) { settled = true; reject(err) }
     })
 
-    busboy.on('error', (err) => {
-      if (!resolved) { resolved = true; reject(err) }
+    // Fires once the request body is fully parsed. An optimized image may still
+    // be compressing asynchronously at this point, so only reject when there was
+    // genuinely no file part — never preempt an in-flight upload.
+    busboy.on('finish', () => {
+      if (!sawFile && !settled) { settled = true; reject(new Error('no file')) }
     })
 
     req.pipe(busboy)
@@ -148,13 +209,16 @@ function handlePhotoUpload(req) {
   return new Promise((resolve, reject) => {
     const busboy = Busboy({ headers: req.headers })
     let albumName = ''
-    let resolved = false
+    let settled = false
+    let sawFile = false
 
     busboy.on('field', (name, val) => {
       if (name === 'album') albumName = val
     })
 
     busboy.on('file', (fieldname, file, { filename }) => {
+      if (!filename) { file.resume(); return }
+      sawFile = true
       const safeName = Date.now() + '-' + filename.replace(/[^a-zA-Z0-9._-]/g, '')
       const webpName = toWebpName(safeName)
       const albumDir = path.join(GALLERY_DIR, albumName || 'default')
@@ -162,22 +226,27 @@ function handlePhotoUpload(req) {
       const chunks = []
       file.on('data', (data) => chunks.push(data))
       file.on('end', async () => {
-        const buf = Buffer.concat(chunks)
         try {
+          const buf = Buffer.concat(chunks)
           const optimized = await optimizeImage(buf)
           fs.writeFileSync(path.join(albumDir, webpName), optimized)
-          if (!resolved) { resolved = true; resolve({ albumName: albumName || 'default', fileName: webpName }) }
+          if (!settled) { settled = true; resolve({ albumName: albumName || 'default', fileName: webpName }) }
         } catch (err) {
-          if (!resolved) { resolved = true; reject(err) }
+          if (!settled) { settled = true; reject(err) }
         }
+      })
+      file.on('error', (err) => {
+        if (!settled) { settled = true; reject(err) }
       })
     })
 
-    busboy.on('finish', () => {
-      if (!resolved) { resolved = true; reject(new Error('no file')) }
-    })
     busboy.on('error', (err) => {
-      if (!resolved) { resolved = true; reject(err) }
+      if (!settled) { settled = true; reject(err) }
+    })
+
+    // See handleUpload: reject on finish only when no file part was present.
+    busboy.on('finish', () => {
+      if (!sawFile && !settled) { settled = true; reject(new Error('no file')) }
     })
     req.pipe(busboy)
   })
@@ -268,8 +337,8 @@ export default function localApiPlugin() {
 
           if (url.pathname === '/api/upload/image' && method === 'POST') {
             ensureDir(IMAGES_DIR)
-            const fileName = await handleUpload(req, IMAGES_DIR)
-            res.end(JSON.stringify({ url: `/images/${fileName}` }))
+            const fileName = await handleUpload(req, IMAGES_DIR, { optimize: true })
+            res.end(JSON.stringify({ name: fileName, url: `/images/${fileName}` }))
             return
           }
 
@@ -282,7 +351,7 @@ export default function localApiPlugin() {
           if (url.pathname === '/api/upload/file' && method === 'POST') {
             ensureDir(FILES_DIR)
             const fileName = await handleUpload(req, FILES_DIR)
-            res.end(JSON.stringify({ url: `/files/${fileName}` }))
+            res.end(JSON.stringify({ name: fileName, url: urlFor('/files/', fileName) }))
             return
           }
 

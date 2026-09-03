@@ -74,7 +74,7 @@ async function remove(name) {
     await ElMessageBox.confirm('确认删除此文件？', '确认', { type: 'warning' })
   } catch { return }
   try {
-    const res = await fetch(`/api/files/${name}`, { method: 'DELETE' })
+    const res = await fetch(`/api/files/${encodeURIComponent(name)}`, { method: 'DELETE' })
     if (res.ok) {
       ElMessage.success('已删除')
       loadFiles()
