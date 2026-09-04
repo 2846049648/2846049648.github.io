@@ -140,6 +140,42 @@ function getDownloadFiles() {
   })
 }
 
+// 编辑器粘贴上传的图片统一以 paste- 前缀命名（见 handleUpload）。
+// 它们是“临时”的：只有被某篇已保存文章的正文引用才保留，否则在对账时清理。
+const PASTE_PREFIX = 'paste-'
+
+// 收集所有已保存文章正文里引用的 /images/ 文件名。
+// 图片名只会是 [A-Za-z0-9._-]（上传时已清洗），无需解码。
+function getReferencedImageNames() {
+  ensureDir(POSTS_DIR)
+  const refs = new Set()
+  const re = /\/images\/([A-Za-z0-9._-]+)/g
+  for (const file of fs.readdirSync(POSTS_DIR)) {
+    if (!file.endsWith('.md')) continue
+    const raw = fs.readFileSync(path.join(POSTS_DIR, file), 'utf-8')
+    let m
+    while ((m = re.exec(raw))) refs.add(m[1])
+  }
+  return refs
+}
+
+// 对账：删除 media 目录里未被任何已保存文章引用的 paste- 图片。
+// 手动上传的素材不带前缀，永远不会被这里删除。
+function reconcilePasteImages() {
+  ensureDir(IMAGES_DIR)
+  const refs = getReferencedImageNames()
+  const removed = []
+  for (const name of fs.readdirSync(IMAGES_DIR)) {
+    if (!name.startsWith(PASTE_PREFIX)) continue
+    if (refs.has(name)) continue
+    const filePath = path.join(IMAGES_DIR, name)
+    if (!fs.statSync(filePath).isFile()) continue
+    fs.unlinkSync(filePath)
+    removed.push(name)
+  }
+  return removed
+}
+
 function readJsonBody(req) {
   return new Promise((resolve) => {
     let body = ''
@@ -151,7 +187,7 @@ function readJsonBody(req) {
   })
 }
 
-function handleUpload(req, uploadDir, { optimize = false } = {}) {
+function handleUpload(req, uploadDir, { optimize = false, prefix = '' } = {}) {
   return new Promise((resolve, reject) => {
     const busboy = Busboy({ headers: req.headers })
     let settled = false
@@ -164,9 +200,10 @@ function handleUpload(req, uploadDir, { optimize = false } = {}) {
       // Download library (optimize=false): keep the original file byte-for-byte
       // under its original name (dedupe -1/-2… when the name is taken).
       // Image library (optimize=true): compress to webp under a unique name.
+      // prefix='paste-' → 编辑器粘贴上传的图，交给对账逻辑自动清理。
       let dest, finalName
       if (optimize) {
-        finalName = toWebpName(Date.now() + '-' + filename.replace(/[^a-zA-Z0-9._-]/g, ''))
+        finalName = toWebpName(prefix + Date.now() + '-' + filename.replace(/[^a-zA-Z0-9._-]/g, ''))
         dest = path.join(uploadDir, finalName)
       } else {
         dest = uniquePath(uploadDir, sanitizeFileName(filename))
@@ -285,6 +322,7 @@ export default function localApiPlugin() {
               excerpt: excerpt || '',
             })
             fs.writeFileSync(path.join(POSTS_DIR, `${slug}.md`), fm + (content || ''), 'utf-8')
+            reconcilePasteImages() // 保存后对账：正文不再引用的粘贴图自动清理
             res.end(JSON.stringify({ ok: true, slug }))
             return
           }
@@ -308,6 +346,7 @@ export default function localApiPlugin() {
 
             if (method === 'DELETE') {
               if (fs.existsSync(filePath)) fs.unlinkSync(filePath)
+              reconcilePasteImages() // 删除整篇文章后清理只属于它的粘贴图
               res.end(JSON.stringify({ ok: true }))
               return
             }
@@ -337,8 +376,18 @@ export default function localApiPlugin() {
 
           if (url.pathname === '/api/upload/image' && method === 'POST') {
             ensureDir(IMAGES_DIR)
-            const fileName = await handleUpload(req, IMAGES_DIR, { optimize: true })
+            const source = url.searchParams.get('source') || ''
+            // 编辑器粘贴 → source=paste，文件加 paste- 前缀以便对账清理
+            const prefix = source === 'paste' ? PASTE_PREFIX : ''
+            const fileName = await handleUpload(req, IMAGES_DIR, { optimize: true, prefix })
             res.end(JSON.stringify({ name: fileName, url: `/images/${fileName}` }))
+            return
+          }
+
+          // === 媒体对账：删除未被任何已保存正文引用的粘贴图 ===
+          if (url.pathname === '/api/media/reconcile' && method === 'POST') {
+            const removed = reconcilePasteImages()
+            res.end(JSON.stringify({ ok: true, removed }))
             return
           }
 

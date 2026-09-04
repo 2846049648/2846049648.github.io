@@ -91,7 +91,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
@@ -107,10 +107,25 @@ const categories = computed(() => {
   return [...set]
 })
 
+// 标签集合跟随当前分类：选“全部”才是所有标签的并集；
+// 选中某个大分类时，只显示该分类文章里用到的标签。
 const allTags = computed(() => {
   const set = new Set()
-  posts.value.forEach(p => (p.tags || []).forEach(t => set.add(t)))
+  visiblePosts.value.forEach(p => (p.tags || []).forEach(t => set.add(t)))
   return [...set]
+})
+
+// 当前分类下命中的文章（不含搜索，只按分类过滤），供标签集合复用
+const visiblePosts = computed(() => {
+  if (!activeCategory.value) return posts.value
+  return posts.value.filter(p => p.category === activeCategory.value)
+})
+
+// 切换分类时，若已选标签不属于该分类则清空，避免筛选结果为空
+watch(activeCategory, () => {
+  if (activeTag.value && !allTags.value.includes(activeTag.value)) {
+    activeTag.value = ''
+  }
 })
 
 const filteredPosts = computed(() => {

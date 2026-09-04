@@ -37,10 +37,12 @@
         <el-input v-model="excerpt" type="textarea" :rows="3" placeholder="文章摘要（可选）" />
       </el-form-item>
       <el-form-item label="内容">
-        <div class="border rounded-lg overflow-hidden w-full" style="border-color: #d1d5db;">
-          <!-- Toolbar -->
-          <div class="flex items-center flex-wrap gap-0.5 px-3 py-2 border-b select-none bg-white"
-            style="border-color: #e5e7eb;">
+        <div class="border rounded-lg w-full" style="border-color: #d1d5db; background: #fff;">
+          <!-- Toolbar (sticky: 内容写长滚动后仍可点加粗等格式按钮) -->
+          <div
+            class="sticky top-3 z-20 flex items-center flex-wrap gap-0.5 px-3 py-2 border-b select-none bg-white rounded-t-lg"
+            style="border-color: #e5e7eb; box-shadow: 0 6px 16px -10px rgba(15, 23, 42, 0.18);"
+          >
             <!-- Headings -->
             <el-dropdown trigger="click" @command="insertHeading">
               <button type="button" class="md-toolbar-btn" title="标题">
@@ -81,7 +83,7 @@
               <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
             </button>
             <!-- Image -->
-            <button type="button" class="md-toolbar-btn" title="插入图片" @click="showImagePicker = true">
+            <button type="button" class="md-toolbar-btn" title="插入图片（或直接在编辑框 Ctrl+V 粘贴）" @click="showImagePicker = true">
               <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
             </button>
 
@@ -176,15 +178,17 @@
               <div><code class="bg-blue-100 px-1 rounded" style="color: #2563eb;">&gt; 引用</code> <span class="text-gray-400">→</span> 引用块</div>
               <div><code class="bg-blue-100 px-1 rounded" style="color: #2563eb;">---</code> <span class="text-gray-400">→</span> 分割线</div>
             </div>
+            <p class="text-xs" style="color: #64748b;">提示：普通回车即换行；空一行才是另起一段（段落间距更大）。</p>
           </div>
 
           <!-- Editor / Live Preview -->
-          <div class="editor-panes" :class="{ split: activeTab === 'split' }">
+          <div class="editor-panes overflow-hidden rounded-b-lg" :class="{ split: activeTab === 'split' }">
             <textarea
               v-if="activeTab !== 'preview'"
               ref="textareaRef"
               v-model="content"
               @keydown="onContentKeydown"
+              @paste="onPasteImage"
               class="w-full font-mono border-0 resize-y outline-none p-4 leading-relaxed"
               :rows="24"
               placeholder="使用 Markdown 编写文章... 点工具栏按钮快速插入格式"
@@ -208,7 +212,8 @@
     <!-- Image Picker Dialog -->
     <el-dialog v-model="showImagePicker" title="选择图片" width="640">
       <div v-if="images.length === 0" class="text-center py-8" style="color: #94a3b8;">
-        暂无图片，请先在媒体库上传
+        媒体库暂无图片<br />
+        <span class="text-xs">可以直接在编辑框里 Ctrl+V 粘贴截图/图片，会自动上传到这里</span>
       </div>
       <div v-else class="grid grid-cols-3 gap-3">
         <div
@@ -232,7 +237,7 @@
 
 <script setup>
 import { ref, computed, onMounted, nextTick, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { marked } from 'marked'
 
@@ -256,10 +261,12 @@ const showHelp = ref(false)
 const showImagePicker = ref(false)
 const images = ref([])
 const selectedImage = ref('')
+const pastingImage = ref(false) // 粘贴图片上传中
 
 const previewHtml = computed(() => {
   try {
-    return marked(content.value || '')
+    // breaks: 单次回车即换行（与正文发布后的渲染保持一致）
+    return marked(content.value || '', { breaks: true, gfm: true })
   } catch {
     return content.value
   }
@@ -536,6 +543,77 @@ function insertSelectedImage() {
   selectedImage.value = ''
 }
 
+// ─── 粘贴图片：复制粘贴即上传媒体库并插入 ───
+
+// 从剪贴板事件里取出图片文件（截图 / 复制图片都能取到）
+function getClipboardImages(e) {
+  const files = []
+  const cd = e.clipboardData
+  if (!cd) return files
+  if (cd.files) {
+    for (const f of cd.files) {
+      if (f.type && f.type.startsWith('image/')) files.push(f)
+    }
+  }
+  // 某些浏览器（如部分网站复制的图片）只以 clipboard item 提供
+  if (!files.length && cd.items) {
+    for (const item of cd.items) {
+      if (item.kind === 'file' && item.type.startsWith('image/')) {
+        const f = item.getAsFile()
+        if (f) files.push(f)
+      }
+    }
+  }
+  return files
+}
+
+async function uploadImage(file) {
+  const fd = new FormData()
+  // 剪贴板粘贴的文件常没有名字/扩展名，补一个以便后端识别类型
+  const name = file.name && file.name.trim()
+    ? file.name
+    : `pasted-${Date.now()}.${(file.type.split('/')[1] || 'png').replace('jpeg', 'jpg')}`
+  fd.append('file', file, name)
+  // source=paste：后端存成 paste-* 临时图，保存/离开时对账清理
+  const res = await fetch('/api/upload/image?source=paste', { method: 'POST', body: fd })
+  const data = await res.json()
+  if (!data.url) throw new Error(data.error || '上传失败')
+  return data.url
+}
+
+async function onPasteImage(e) {
+  const files = getClipboardImages(e)
+  if (!files.length) return // 粘贴的是文字等，交给默认行为
+  e.preventDefault()
+  if (pastingImage.value) { ElMessage.info('图片正在上传，请稍候'); return }
+  pastingImage.value = true
+  try {
+    const ta = getTextarea()
+    if (!ta) return
+    let pos = ta.selectionStart
+    for (const file of files) {
+      const url = await uploadImage(file)
+      const before = content.value.slice(0, pos)
+      const after = content.value.slice(pos)
+      const needBreak = pos > 0 && content.value[pos - 1] !== '\n'
+      // alt 取自文件名（去掉扩展名），并清掉会破坏 Markdown 的字符
+      const alt = (file.name || 'image').replace(/\.[^.]+$/, '').replace(/[\]\n]/g, '')
+      const md = (needBreak ? '\n' : '') + `![${alt || '图片'}](${url})` + '\n'
+      content.value = before + md + after
+      pos = before.length + md.length // 下一张插到本张之后
+    }
+    nextTick(() => {
+      ta.focus()
+      ta.setSelectionRange(pos, pos)
+    })
+    ElMessage.success('图片已上传并插入')
+  } catch (err) {
+    ElMessage.error('图片上传失败: ' + ((err && err.message) || err))
+  } finally {
+    pastingImage.value = false
+  }
+}
+
 // Load images when dialog opens
 watch(showImagePicker, async (val) => {
   if (val) {
@@ -672,6 +750,14 @@ async function save() {
 function cancel() {
   router.push('/admin/posts')
 }
+
+// 离开编辑器（取消 / 菜单跳转 / 浏览器后退）时，清理本次草稿里粘贴过但
+// 没被任何已保存文章引用的临时图；保存成功的引用图不受影响。
+onBeforeRouteLeave(() => {
+  try {
+    fetch('/api/media/reconcile', { method: 'POST' }).catch(() => {})
+  } catch { /* ignore */ }
+})
 </script>
 
 <style scoped>

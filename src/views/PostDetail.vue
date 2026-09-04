@@ -17,12 +17,12 @@
       <div class="flex gap-8">
         <!-- TOC Sidebar (desktop, left) -->
         <div v-if="headings.length > 1" class="hidden lg:block w-56 flex-shrink-0">
-          <div class="sticky top-24">
+          <div class="sticky top-24 toc-wrap">
             <h4 class="text-xs font-semibold uppercase tracking-wider mb-3 flex items-center gap-2" :style="{ color: 'var(--text-light)' }">
               <span class="inline-block w-1 h-4 rounded-full" :style="{ background: 'var(--color-primary)' }" />
               目录
             </h4>
-            <nav>
+            <nav ref="tocScrollEl" class="toc-scroll">
               <a
                 v-for="h in headings" :key="h.id"
                 :href="'#' + h.id"
@@ -103,7 +103,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { marked } from 'marked'
 import { markedHighlight } from 'marked-highlight'
@@ -119,8 +119,24 @@ const profile = ref({ name: '作者' })
 const utterancesLoaded = ref(false)
 const allPosts = ref([])
 const articleRef = ref(null)
+const tocScrollEl = ref(null)
 
 const { headings, activeId, generateToc, initScrollSpy } = useToc()
+
+// Keep the currently-active heading visible inside the scrollable TOC.
+watch(activeId, () => {
+  const container = tocScrollEl.value
+  if (!container || !container.clientHeight) return
+  const active = container.querySelector('.toc-link.active')
+  if (!active) return
+  const top = active.offsetTop
+  const bottom = top + active.offsetHeight
+  const viewTop = container.scrollTop
+  const viewBottom = viewTop + container.clientHeight
+  if (top < viewTop || bottom > viewBottom) {
+    container.scrollTop = top - container.clientHeight / 2 + active.offsetHeight / 2
+  }
+})
 
 const repoSet = computed(() => !!import.meta.env.VITE_UTTERANCES_REPO)
 
@@ -138,7 +154,8 @@ marked.use(markedHighlight({
 }))
 
 function renderMarkdown(text) {
-  const rawHtml = marked.parse(text)
+  // breaks: 单次回车即换行 —— 与编辑器实时预览一致
+  const rawHtml = marked.parse(text, { breaks: true, gfm: true })
   return generateToc(rawHtml)
 }
 
@@ -276,5 +293,21 @@ function loadUtterances() {
 </script>
 
 <style scoped>
-/* No scoped styles needed — using global card-cyber and tag-cyber classes */
+.toc-scroll {
+  max-height: calc(100vh - 8rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-gutter: stable;
+}
+.toc-scroll::-webkit-scrollbar {
+  width: 5px;
+}
+.toc-scroll::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+.toc-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
 </style>

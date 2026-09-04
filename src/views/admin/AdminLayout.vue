@@ -35,8 +35,8 @@
         <span>返回前台</span>
       </el-menu-item>
     </el-menu>
-    <!-- Light main content area -->
-    <main class="flex-1 p-8 overflow-auto" style="background: #f0f2f5;">
+    <!-- Light main content area (self-scrolling viewport, so sticky children work) -->
+    <main class="flex-1 h-screen p-8 overflow-y-auto overflow-x-hidden" style="background: #f0f2f5;">
       <router-view />
     </main>
   </div>
