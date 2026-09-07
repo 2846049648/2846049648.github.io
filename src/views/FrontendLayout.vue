@@ -11,7 +11,7 @@
 
     <!-- Sticky Header -->
     <header class="sticky top-0 z-50" :style="{ background: 'var(--header-bg)', borderBottom: '1px solid var(--header-border)' }">
-      <div class="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <div :class="['mx-auto px-4 sm:px-6 h-16 flex items-center justify-between', contentWidth]">
         <router-link to="/" class="text-xl font-bold gradient-text">
           {{ profile.name || '我的空间' }}
         </router-link>
@@ -57,13 +57,13 @@
     </header>
 
     <!-- Main Content -->
-    <main class="flex-1 w-full max-w-5xl mx-auto px-4 sm:px-6 py-8">
+    <main :class="['flex-1 w-full mx-auto px-4 sm:px-6 py-8', contentWidth]">
       <router-view />
     </main>
 
     <!-- Footer -->
     <footer class="border-t" :style="{ borderColor: 'var(--border-color)', background: 'var(--bg-surface)' }">
-      <div class="max-w-5xl mx-auto px-4 sm:px-6 py-8 text-center text-sm space-y-1" :style="{ color: 'var(--text-light)' }">
+      <div :class="['mx-auto px-4 sm:px-6 py-8 text-center text-sm space-y-1', contentWidth]" :style="{ color: 'var(--text-light)' }">
         <p>&copy; {{ new Date().getFullYear() }} {{ profile.name || 'My Site' }}. All rights reserved.</p>
         <p class="flex items-center justify-center gap-1.5">
           <span class="inline-block w-1.5 h-1.5 rounded-full" :style="{ background: 'var(--color-primary)' }" />
@@ -84,9 +84,15 @@
 <script setup>
 import { computed, ref, onMounted } from 'vue'
 import { useDarkMode } from '../composables/useDarkMode.js'
+import { useRoute } from 'vue-router'
 import SearchModal from '../components/SearchModal.vue'
 
+const route = useRoute()
 const isDev = computed(() => import.meta.env.DEV)
+
+// 阅读正文页（含目录两栏）放宽到 max-w-7xl，减少大屏两侧大片留白；其余页面维持原宽度
+const wide = computed(() => route.path.startsWith('/posts/'))
+const contentWidth = computed(() => (wide.value ? 'max-w-7xl' : 'max-w-5xl'))
 const profile = ref({ name: '我的空间' })
 const { isDark, toggle: toggleDark } = useDarkMode()
 const showSearch = ref(false)
