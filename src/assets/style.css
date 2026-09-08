@@ -457,6 +457,24 @@ body {
   opacity: 0.95;
 }
 
+/* 树形目录:无序列表重置 + 子级分组缩进成树(高一级包含低一级) */
+.toc-tree,
+.toc-tree ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.toc-tree li > ul {
+  margin-left: 0.5rem;
+  padding-left: 0.45rem;
+  border-left: 1px dashed var(--border-color);
+}
+/* 层级缩进交给上面的嵌套结构,覆盖 .h2/.h3 原有的固定缩进,避免双重缩进 */
+.toc-tree .toc-link.h2,
+.toc-tree .toc-link.h3 {
+  padding-left: 0.5rem;
+}
+
 /* ── Search highlight ── */
 .search-highlight {
   background: rgba(0, 229, 255, 0.2);

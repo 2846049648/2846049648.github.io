@@ -239,7 +239,7 @@
 import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { marked } from 'marked'
+import { marked } from '../../lib/markdown.js'
 
 const route = useRoute()
 const router = useRouter()

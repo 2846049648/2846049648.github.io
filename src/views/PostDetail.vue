@@ -23,12 +23,7 @@
               目录
             </h4>
             <nav ref="tocScrollEl" class="toc-scroll">
-              <a
-                v-for="h in headings" :key="h.id"
-                :href="'#' + h.id"
-                :class="['toc-link', h.level, { active: activeId === h.id }]"
-                @click.prevent="scrollToHeading(h.id)"
-              >{{ h.text }}</a>
+              <TocTree :nodes="tocTree" :active-id="activeId" @navigate="scrollToHeading" />
             </nav>
           </div>
         </div>
@@ -105,10 +100,9 @@
 <script setup>
 import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { marked } from 'marked'
-import { markedHighlight } from 'marked-highlight'
-import hljs from 'highlight.js'
-import { useToc } from '../composables/useToc.js'
+import { renderMarkdown as renderRawHtml } from '../lib/markdown.js'
+import { useToc, buildTocTree } from '../composables/useToc.js'
+import TocTree from '../components/TocTree.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -122,6 +116,7 @@ const articleRef = ref(null)
 const tocScrollEl = ref(null)
 
 const { headings, activeId, generateToc, initScrollSpy } = useToc()
+const tocTree = computed(() => buildTocTree(headings.value))
 
 // Keep the currently-active heading visible inside the scrollable TOC.
 watch(activeId, () => {
@@ -142,20 +137,9 @@ const repoSet = computed(() => !!import.meta.env.VITE_UTTERANCES_REPO)
 
 const renderedContent = ref('')
 
-// Configure marked with highlight.js
-marked.use(markedHighlight({
-  langPrefix: 'hljs language-',
-  highlight(code, lang) {
-    if (lang && hljs.getLanguage(lang)) {
-      try { return hljs.highlight(code, { language: lang }).value } catch {}
-    }
-    return hljs.highlightAuto(code).value
-  },
-}))
-
 function renderMarkdown(text) {
-  // breaks: 单次回车即换行 —— 与编辑器实时预览一致
-  const rawHtml = marked.parse(text, { breaks: true, gfm: true })
+  // breaks 与 setext 禁用等 marked 配置统一在 src/lib/markdown.js
+  const rawHtml = renderRawHtml(text)
   return generateToc(rawHtml)
 }
 
@@ -294,6 +278,7 @@ function loadUtterances() {
 
 <style scoped>
 .toc-scroll {
+  position: relative;
   max-height: calc(100vh - 8rem);
   overflow-y: auto;
   overscroll-behavior: contain;

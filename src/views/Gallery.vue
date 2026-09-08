@@ -146,7 +146,7 @@
 
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
-import { marked } from 'marked'
+import { marked } from '../lib/markdown.js'
 import * as exifr from 'exifr'
 
 const albums = ref([])

@@ -1,5 +1,23 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 
+const LEVEL = { h1: 1, h2: 2, h3: 3 }
+
+// 把扁平的 headings 列表按文档顺序组装成树(h1 > h2 > h3):
+// 低一级标题挂到最近一个高一级标题之下,实现「高级目录包含低级目录」。
+export function buildTocTree(headings) {
+  const root = []
+  const stack = [] // { node, level }
+  for (const h of headings) {
+    const node = { ...h, children: [] }
+    const lv = LEVEL[h.level] ?? 3
+    while (stack.length && stack[stack.length - 1].level >= lv) stack.pop()
+    if (stack.length) stack[stack.length - 1].node.children.push(node)
+    else root.push(node)
+    stack.push({ node, level: lv })
+  }
+  return root
+}
+
 export function useToc() {
   const headings = ref([])
   const activeId = ref('')
