@@ -1,6 +1,6 @@
 ---
 title: 远程连接与网络访问
-date: 2026-04-01
+date: 2026-09-09
 category: 学习记录
 tags: ["ssh", "vnc", "smb", "nfs", "内网穿透", "vpn"]
 excerpt: SSH 远程登录与密钥、VNC 图形桌面、SMB/NFS 文件共享、内网穿透与异地组网
@@ -160,3 +160,8 @@ sudo apt install unzip -y
 ```bash
 wget -O /tmp/easytier.sh "https://raw.githubusercontent.com/EasyTier/EasyTier/main/script/install.sh" && sudo bash /tmp/easytier.sh install --gh-proxy https://ghfast.top/
 ```
+
+# 内网穿透：樱花
+是一个提供内网穿透服务器的网站，网站：https://www.natfrp.com
+通过安装启动器，输入密钥创建隧道，进行流量转发，实现内网穿透。
+有免费流量使用，也可以氪金，获得高带宽和更多流量。
